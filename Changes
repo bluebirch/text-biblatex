@@ -1,6 +1,13 @@
 Revision history for BibTeX-Parser
 
-{{$NEXT}}
+
+0.67    2015-12-28 22:36:42+00:00
+        Corrected test t/13_output.t
+
+0.66    2015-12-23 19:52:55-05:00
+        Corrected bug 67419.
+        Added $entry->to_string function
+        No Do not remove braces from the authors' names
 
 0.65    2013-09-03 21:04:43
 	Add links in documentation.

@@ -1,66 +1,17 @@
 package BibTeX::Parser;
+{
+  $BibTeX::Parser::VERSION = '0.66';
+}
 # ABSTRACT: A pure perl BibTeX parser
 use warnings;
 use strict;
 
 use BibTeX::Parser::Entry;
 
-=for stopwords jr von
-
-=head1 NAME
-
-BibTeX::Parser - A pure perl BibTeX parser
-
-=cut
 
 my $re_namechar = qr/[a-zA-Z0-9\!\$\&\*\+\-\.\/\:\;\<\>\?\[\]\^\_\`\|]/o;
 my $re_name     = qr/$re_namechar+/o;
 
-=head1 SYNOPSIS
-
-Parses BibTeX files.
-
-    use BibTeX::Parser;
-	use IO::File;
-
-    my $fh     = IO::File->new("filename");
-
-    # Create parser object ...
-    my $parser = BibTeX::Parser->new($fh);
-    
-    # ... and iterate over entries
-    while (my $entry = $parser->next ) {
-	    if ($entry->parse_ok) {
-		    my $type    = $entry->type;
-		    my $title   = $entry->field("title");
-
-		    my @authors = $entry->author;
-		    # or:
-		    my @editors = $entry->editor;
-		    
-		    foreach my $author (@authors) {
-			    print $author->first . " "
-			    	. $author->von . " "
-				. $author->last . ", "
-				. $author->jr;
-		    }
-	    } else {
-		    warn "Error parsing file: " . $entry->error;
-	    }
-    }
-
-
-=head1 FUNCTIONS
-
-=head2 new
-
-Creates new parser object. 
-
-Parameters:
-
-	* fh: A filehandle
-
-=cut
 
 sub new {
     my ( $class, $fh ) = @_;
@@ -183,11 +134,6 @@ sub _parse_next {
     }
 }
 
-=head2 next
-
-Returns the next parsed entry or undef.
-
-=cut
 
 sub next {
     my $self = shift;
@@ -262,20 +208,155 @@ sub _extract_bracketed
 	}
 }
 
+# Split the $string using $pattern as a delimiter with
+# each part having balanced braces (so "{$pattern}"
+# does NOT split).
+# Return empty list if unmatched braces
+
+sub _split_braced_string {
+    my $string = shift;
+    my $pattern = shift;
+    my @tokens;
+    return () if  $string eq '';
+    my $buffer;
+    while (!defined pos $string || pos $string < length $string) {
+	if ( $string =~ /\G(.*?)(\{|$pattern)/cgi ) {
+	    my $match = $1;
+	    if ( $2 =~ /$pattern/i ) {
+		$buffer .= $match;
+		push @tokens, $buffer;
+		$buffer = "";
+	    } elsif ( $2 =~ /\{/ ) {
+		$buffer .= $match . "{";
+		my $numbraces=1;
+		while ($numbraces !=0 && pos $string < length $string) {
+		    my $symbol = substr($string, pos $string, 1);
+		    $buffer .= $symbol;
+		    if ($symbol eq '{') {
+			$numbraces ++;
+		    } elsif ($symbol eq '}') {
+			$numbraces --;
+		    }
+		    pos($string) ++;
+		}
+		if ($numbraces != 0) {
+		    return ();
+		}
+	    } else {
+		$buffer .= $match;
+	    }
+	} else {
+	    $buffer .= substr $string, (pos $string || 0);
+	    last;
+	}
+    }
+    push @tokens, $buffer if $buffer;
+    return @tokens;
+}
+
+
 1;    # End of BibTeX::Parser
 
-=head2 SEE ALSO
+
+__END__
+=pod
+
+=head1 NAME
+
+BibTeX::Parser - A pure perl BibTeX parser
+
+=head1 VERSION
+
+version 0.66
+
+=head1 SYNOPSIS
+
+Parses BibTeX files.
+
+    use BibTeX::Parser;
+	use IO::File;
+
+    my $fh     = IO::File->new("filename");
+
+    # Create parser object ...
+    my $parser = BibTeX::Parser->new($fh);
+    
+    # ... and iterate over entries
+    while (my $entry = $parser->next ) {
+	    if ($entry->parse_ok) {
+		    my $type    = $entry->type;
+		    my $title   = $entry->field("title");
+
+		    my @authors = $entry->author;
+		    # or:
+		    my @editors = $entry->editor;
+		    
+		    foreach my $author (@authors) {
+			    print $author->first . " "
+			    	. $author->von . " "
+				. $author->last . ", "
+				. $author->jr;
+		    }
+	    } else {
+		    warn "Error parsing file: " . $entry->error;
+	    }
+    }
+
+=for stopwords jr von
+
+=head1 NAME
+
+BibTeX::Parser - A pure perl BibTeX parser
+
+=head1 VERSION
+
+version 0.65
+
+=head1 FUNCTIONS
+
+=head2 new
+
+Creates new parser object. 
+
+Parameters:
+
+	* fh: A filehandle
+
+=head2 next
+
+Returns the next parsed entry or undef.
+
+=head1 NOTES
+
+The fields C<author> and C<editor> are canonized, see
+L<BibTeX::Parser::Author>
+
+
+=head1 SEE ALSO
 
 =over 4
 
-=item 
+=item
 
 L<BibTeX::Parser::Entry>
 
-=item 
+=item
 
 L<BibTeX::Parser::Author>
 
 =back
 
+=head1 AUTHOR
+
+Gerhard Gossen <gerhard.gossen@googlemail.com> and
+Boris Veytsman <boris@varphi.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013-2015 by Gerhard Gossen and Boris Veytsman
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
+
