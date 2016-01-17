@@ -262,9 +262,61 @@ sub _extract_bracketed
 	}
 }
 
+# Split the $string using $pattern as a delimiter with
+# each part having balanced braces (so "{$pattern}"
+# does NOT split).
+# Return empty list if unmatched braces
+
+sub _split_braced_string {
+    my $string = shift;
+    my $pattern = shift;
+    my @tokens;
+    return () if  $string eq '';
+    my $buffer;
+    while (!defined pos $string || pos $string < length $string) {
+    if ( $string =~ /\G(.*?)(\{|$pattern)/cgi ) {
+        my $match = $1;
+        if ( $2 =~ /$pattern/i ) {
+        $buffer .= $match;
+        push @tokens, $buffer;
+        $buffer = "";
+        } elsif ( $2 =~ /\{/ ) {
+        $buffer .= $match . "{";
+        my $numbraces=1;
+        while ($numbraces !=0 && pos $string < length $string) {
+            my $symbol = substr($string, pos $string, 1);
+            $buffer .= $symbol;
+            if ($symbol eq '{') {
+            $numbraces ++;
+            } elsif ($symbol eq '}') {
+            $numbraces --;
+            }
+            pos($string) ++;
+        }
+        if ($numbraces != 0) {
+            return ();
+        }
+        } else {
+        $buffer .= $match;
+        }
+    } else {
+        $buffer .= substr $string, (pos $string || 0);
+        last;
+    }
+    }
+    push @tokens, $buffer if $buffer;
+    return @tokens;
+}
+
 1;    # End of BibTeX::Parser
 
-=head2 SEE ALSO
+=head1 NOTES
+
+The fields C<author> and C<editor> are canonized, see
+L<BibTeX::Parser::Author>
+
+
+=head1 SEE ALSO
 
 =over 4
 

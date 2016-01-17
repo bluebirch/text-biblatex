@@ -3,6 +3,7 @@ package BibTeX::Parser::Entry;
 use warnings;
 use strict;
 
+use BibTeX::Parser;
 use BibTeX::Parser::Author;
 
 =head1 NAME
@@ -195,74 +196,42 @@ sub _handle_cleaned_author_editor {
 no LaTeX::ToUnicode;
 
 sub _handle_author_editor {
-	my $type = shift;
-	my $self = shift;
-	if (@_) {
-		if (@_ == 1) { #single string
-			# my @names = split /\s+and\s+/i, $_[0];
-			my @names = _split_author_field( $_[0] );
-			$self->{"_$type"} = [map {new BibTeX::Parser::Author $_} @names];
-			$self->field($type, join " and ", @{$self->{"_$type"}});
-		} else {
-			$self->{"_$type"} = [];
-			foreach my $param (@_) {
-				if (ref $param eq "BibTeX::Author") {
-					push @{$self->{"_$type"}}, $param;
-				} else {
-					push @{$self->{"_$type"}}, new BibTeX::Parser::Author $param;
-				}
-
-				$self->field($type, join " and ", @{$self->{"_$type"}});
-			}
-		}
-	} else {
-		unless ( defined $self->{"_$type"} ) {
-			#my @names = split /\s+and\s+/i, $self->{$type} || "";
-			my @names = _split_author_field( $self->{$type} || "" );
-			$self->{"_$type"} = [map {new BibTeX::Parser::Author $_} @names];
-		}
-		return @{$self->{"_$type"}};
-	}
-}
-
-# _split_author_field($field)
-#
-# Split an author field into different author names.
-# Handles quoted names ({name}).
-sub _split_author_field {
-    my $field = shift;
-
-    return () if !defined $field || $field eq '';
-
-    my @names;
-
-    my $buffer;
-    while (!defined pos $field || pos $field < length $field) {
-	if ( $field =~ /\G ( .*? ) ( \{ | \s+ and \s+ )/xcgi ) {
-	    my $match = $1;
-	    if ( $2 =~ /and/i ) {
-		$buffer .= $match;
-		push @names, $buffer;
-		$buffer = "";
-	    } elsif ( $2 =~ /\{/ ) {
-		$buffer .= $match . "{";
-		if ( $field =~ /\G (.* \})/cgx ) {
-		    $buffer .= $1;
-		} else {
-		    die "Missing closing brace at " . substr( $field, pos $field, 10 );
-		}
-	    } else {
-		$buffer .= $match;
-	    }
-	} else {
-	   #print "# $field " . (pos ($field) || 0) . "\n";
-	   $buffer .= substr $field, (pos $field || 0);
-	   last;
-	}
+    my $type = shift;
+    my $self = shift;
+    if (@_) {
+    if (@_ == 1) { #single string
+        # my @names = split /\s+and\s+/i, $_[0];
+        $_[0] =~ s/^\s*//; 
+        $_[0] =~ s/\s*$//; 
+        my @names = BibTeX::Parser::_split_braced_string($_[0], 
+                                 '\s+and\s+');
+        if (!scalar @names) {
+        $self->error('Bad names in author/editor field');
+        return;
+        }
+        $self->{"_$type"} = [map {new BibTeX::Parser::Author $_} @names];
+        $self->field($type, join " and ", @{$self->{"_$type"}});
+    } else {
+        $self->{"_$type"} = [];
+        foreach my $param (@_) {
+        if (ref $param eq "BibTeX::Author") {
+            push @{$self->{"_$type"}}, $param;
+        } else {
+            push @{$self->{"_$type"}}, new BibTeX::Parser::Author $param;
+        }
+        
+        $self->field($type, join " and ", @{$self->{"_$type"}});
+        }
     }
-    push @names, $buffer if $buffer;
-    return @names;
+    } else {
+    unless ( defined $self->{"_$type"}) {
+        my @names = BibTeX::Parser::_split_braced_string($self->{$type} || "", '\s+and\s+' );
+        $self->{"_$type"} = [map {new BibTeX::Parser::Author $_} @names];
+    }
+    return @{$self->{"_$type"}};
+    }
 }
+
 
 =head2 author([@authors])
 
@@ -340,5 +309,32 @@ sub raw_bibtex {
 	}
 	return $self->{_raw};
 }
+
+=head2 to_string ()
+
+Returns a text of the BibTeX entry in BibTeX format
+
+=cut
+
+sub to_string {
+    my $self = shift;
+    my @fields = grep {!/^_/} keys %$self;  
+    my $result = '@'.$self->type."{".$self->key.",\n";
+    foreach my $field (@fields) {
+    my $value = $self->field($field);
+    if ($field eq 'author') {
+        my @names = ($self->author);
+        $value = join(' and ', @names);
+    }
+    if ($field eq 'editor') {
+        my @names = ($self->editors);
+        $value = join(' and ', @names);
+    }
+    $result .= "    $field = {"."$value"."},\n";
+    }
+    $result .= "}";
+    return $result;
+}
+
 
 1; # End of BibTeX::Entry
