@@ -1,5 +1,6 @@
 package BibTeX::Parser::Entry;
 
+# ABSTRACT: Contains a single entry of a BibTeX document
 use warnings;
 use strict;
 

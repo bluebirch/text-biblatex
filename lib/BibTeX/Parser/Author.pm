@@ -1,5 +1,6 @@
 package BibTeX::Parser::Author;
 
+# ABSTRACT: Contains a single author for a BibTeX document
 use warnings;
 use strict;
 

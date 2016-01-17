@@ -1,4 +1,5 @@
 package BibTeX::Parser;
+
 # ABSTRACT: A pure perl BibTeX parser
 use warnings;
 use strict;
