@@ -54,7 +54,7 @@ In normal cases, C<parse()> is called from C<new()>.
 sub parse {
     my ( $self, $jabref_file_string ) = @_;
 
-    if ($jabref_file_string) {
+    if ($jabref_file_string && $jabref_file_string =~ m/^[^:]*:[^:]+:[^:]+$/) {
 
         # Jabref store file links in three parts delimited by colon
         ( $self->{description}, $self->{path}, $self->{type} ) = split m/:/,
@@ -66,9 +66,20 @@ sub parse {
         # JabRef on windows use backslash as separator; fix that
         $self->{path} =~ tr:\\:/:;
 
-        return 1;
+        return $self->{parse_ok} = 1;
     }
-    return 0;
+    return $self->{parse_ok} = undef;
+}
+
+=head2 parse_ok()
+
+Returns true if file field was properly parsed.
+
+=cut
+
+sub parse_ok {
+    my $self = shift;
+    return $self->{parse_ok};
 }
 
 =head2 path( [$path] )

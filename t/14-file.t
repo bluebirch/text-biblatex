@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use Test::More tests => 21;
+use Test::More tests => 27;
 
 use BibTeX::Parser::File;
 
@@ -8,6 +8,8 @@ use BibTeX::Parser::File;
 my $file = new BibTeX::Parser::File("description:path/to/file.pdf:PDF");
 
 isa_ok($file, "BibTeX::Parser::File");
+
+is($file->parse_ok, 1, "File::parse_ok valid entry");
 
 # test description
 
@@ -48,37 +50,9 @@ unlink "tmp2";
 # to_string
 is( $file->to_string, "another description:tmp2:DOCX", "File::to_string");
 
-
-
-
-# is($entry->type, "TYPE", "Entry::type get");
-
-# $entry->type("newtype");
-
-# is($entry->type, "NEWTYPE", "Entry::type set");
-
-# is($entry->key, "key", "Entry::key get");
-
-# $entry->key("newkey");
-
-# is($entry->key, "newkey", "Entry::key set");
-
-# is($entry->field("title"), "title", "Entry::field with new");
-
-# $entry->field("title" => "newtitle");
-
-# is($entry->field("title"), "newtitle", "Entry::field overwrite");
-
-# $entry->field("year" => 2008);
-
-# is($entry->field("year"), 2008, "Entry::field set");
-
-# is($entry->field("pages"), undef, "Entry::field undef on unknown value");
-
-# is($entry->fieldlist, 2, "size of fieldlist");
-
-# ok($entry->has("title"), "Entry::has true on known value");
-
-# ok($entry->has("year"), "Entry::has true on known value");
-
-# ok( ! $entry->has("pages"), "Entry::has false on unknown value");
+# test parsing of invalid file links
+is( $file->parse( "path/to/file.pdf"), undef, "File::parse invalid entry");
+is( $file->parse_ok, undef, "File::parse_ok invalid entry");
+is( $file->parse( ":file.pdf"), undef, "File::parse invalid entry");
+is( $file->parse( ":file.pdf:PDF:"), undef, "File::parse invalid entry");
+is( $file->parse( ":::"), undef, "File::parse invalid entry");

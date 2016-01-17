@@ -308,6 +308,33 @@ sub _sanitize_field {
     return $value;
 }
 
+=head2 files()
+
+Return an array of BibTeX::Parser::File objects.
+
+=cut
+
+sub files {
+    my $self = shift;
+    return @{ $self->_files };
+}
+
+# Return an array reference of BibTeX::Parser::File objects.
+
+sub _files {
+    my $self = shift;
+    if ( $self->{_files} ) {
+        return $self->{_files};
+    }
+    elsif ( $self->has("file") ) {
+        my $files = [];
+        @$files = map { MyBibTeX::Parser::File->new($_) } split m/;/,
+            $self->field("file");
+        return $files;
+    }
+    return [];
+}
+
 =head2 raw_bibtex
 
 Return raw BibTeX entry (if available).
@@ -329,7 +356,13 @@ Returns a text of the BibTeX entry in BibTeX format
 =cut
 
 sub to_string {
-    my $self   = shift;
+    my $self = shift;
+
+    # make sure the 'file' field is correct before converting to_string
+    if ( $self->{_files} ) {
+        $self->{file}
+            = join( ';', map { $_->to_string } @{ $self->{_files} } );
+    }
     my @fields = grep { !/^_/ } keys %$self;
     my $result = '@' . $self->type . "{" . $self->key . ",\n";
     foreach my $field (@fields) {
@@ -339,7 +372,7 @@ sub to_string {
             $value = join( ' and ', @names );
         }
         if ( $field eq 'editor' ) {
-            my @names = ( $self->editors );
+            my @names = ( $self->editor );
             $value = join( ' and ', @names );
         }
         $result .= "    $field = {" . "$value" . "},\n";
