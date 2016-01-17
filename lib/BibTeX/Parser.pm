@@ -22,7 +22,7 @@ my $re_name     = qr/$re_namechar+/o;
 Parses BibTeX files.
 
     use BibTeX::Parser;
-	use IO::File;
+    use IO::File;
 
     my $fh     = IO::File->new("filename");
 
@@ -31,23 +31,23 @@ Parses BibTeX files.
     
     # ... and iterate over entries
     while (my $entry = $parser->next ) {
-	    if ($entry->parse_ok) {
-		    my $type    = $entry->type;
-		    my $title   = $entry->field("title");
+        if ($entry->parse_ok) {
+            my $type    = $entry->type;
+            my $title   = $entry->field("title");
 
-		    my @authors = $entry->author;
-		    # or:
-		    my @editors = $entry->editor;
-		    
-		    foreach my $author (@authors) {
-			    print $author->first . " "
-			    	. $author->von . " "
-				. $author->last . ", "
-				. $author->jr;
-		    }
-	    } else {
-		    warn "Error parsing file: " . $entry->error;
-	    }
+            my @authors = $entry->author;
+            # or:
+            my @editors = $entry->editor;
+            
+            foreach my $author (@authors) {
+                print $author->first . " "
+                    . $author->von . " "
+                . $author->last . ", "
+                . $author->jr;
+            }
+        } else {
+            warn "Error parsing file: " . $entry->error;
+        }
     }
 
 
@@ -59,7 +59,7 @@ Creates new parser object.
 
 Parameters:
 
-	* fh: A filehandle
+    * fh: A filehandle
 
 =cut
 
@@ -105,8 +105,8 @@ sub _parse_next {
 
         my $current_entry = new BibTeX::Parser::Entry;
         if (/@($re_name)/cgo) {
-	    my $type = uc $1;
-            $current_entry->type( $type );
+            my $type = uc $1;
+            $current_entry->type($type);
             my $start_pos = pos($_) - length($type) - 1;
 
             # read rest of entry (matches braces)
@@ -116,15 +116,17 @@ sub _parse_next {
             while ( $bracelevel != 0 ) {
                 my $position = pos($_);
                 my $line     = $self->{fh}->getline;
-				last unless defined $line;
-                $bracelevel =
-                  $bracelevel + ( $line =~ tr/\{/\{/ ) - ( $line =~ tr/\}/\}/ );
+                last unless defined $line;
+                $bracelevel
+                    = $bracelevel
+                    + ( $line =~ tr/\{/\{/ )
+                    - ( $line =~ tr/\}/\}/ );
                 $_ .= $line;
                 pos($_) = $position;
             }
 
             # Remember raw bibtex code
-            my $raw = substr($_, $start_pos);
+            my $raw = substr( $_, $start_pos );
             $raw =~ s/^\s+//;
             $raw =~ s/\s+$//;
             $current_entry->raw_bibtex($raw);
@@ -142,43 +144,52 @@ sub _parse_next {
                     }
                     $self->{strings}->{$key} = $value;
                     /\G[\s\n]*\}/cg;
-                } else {
-                    $current_entry->error("Malformed string!");
-					return $current_entry;
                 }
-            } elsif ( $type eq "COMMENT" or $type eq "PREAMBLE" ) {
+                else {
+                    $current_entry->error("Malformed string!");
+                    return $current_entry;
+                }
+            }
+            elsif ( $type eq "COMMENT" or $type eq "PREAMBLE" ) {
                 /\G\{./cgo;
                 _slurp_close_bracket;
-            } else {    # normal entry
+            }
+            else {    # normal entry
                 $current_entry->parse_ok(1);
 
-				# parse key
+                # parse key
                 if (/\G\s*\{(?:\s*($re_name)\s*,[\s\n]*|\s+\r?\s*)/cgo) {
                     $current_entry->key($1);
 
-					# fields
+                    # fields
                     while (/\G[\s\n]*($re_name)[\s\n]*=[\s\n]*/cgo) {
                         $current_entry->field(
-                                      $1 => _parse_string( $self->{strings} ) );
+                            $1 => _parse_string( $self->{strings} ) );
                         my $idx = index( $_, ',', pos($_) );
                         pos($_) = $idx + 1 if $idx > 0;
                     }
 
                     return $current_entry;
 
-                } else {
+                }
+                else {
 
-                    $current_entry->error("Malformed entry (key contains illegal characters) at " . substr($_, pos($_) || 0, 20)  . ", ignoring");
+                    $current_entry->error(
+                        "Malformed entry (key contains illegal characters) at "
+                            . substr( $_, pos($_) || 0, 20 )
+                            . ", ignoring" );
                     _slurp_close_bracket;
-					return $current_entry;
+                    return $current_entry;
                 }
             }
 
             $self->{buffer} = substr $_, pos($_);
 
-        } else {
-            $current_entry->error("Did not find type at " . substr($_, pos($_) || 0, 20)); 
-			return $current_entry;
+        }
+        else {
+            $current_entry->error(
+                "Did not find type at " . substr( $_, pos($_) || 0, 20 ) );
+            return $current_entry;
         }
 
     }
@@ -200,17 +211,18 @@ sub next {
 # nested brackets
 sub _slurp_close_bracket {
     my $bracelevel = 0;
-  BRACE: {
+BRACE: {
         /\G[^\}]*\{/cg && do { $bracelevel++; redo BRACE };
         /\G[^\{]*\}/cg
-          && do {
+            && do {
             if ( $bracelevel > 0 ) {
                 $bracelevel--;
                 redo BRACE;
-            } else {
+            }
+            else {
                 return;
             }
-          }
+            }
     }
 }
 
@@ -222,17 +234,21 @@ sub _parse_string {
 
     my $value = "";
 
-  PART: {
+PART: {
         if (/\G(\d+)/cg) {
             $value .= $1;
-        } elsif (/\G($re_name)/cgo) {
-            warn("Using undefined string $1") unless defined $strings_ref->{$1};
+        }
+        elsif (/\G($re_name)/cgo) {
+            warn("Using undefined string $1")
+                unless defined $strings_ref->{$1};
             $value .= $strings_ref->{$1} || "";
-        } elsif (/\G"(([^"\\]*(\\.)*[^\\"]*)*)"/cgs)
+        }
+        elsif (/\G"(([^"\\]*(\\.)*[^\\"]*)*)"/cgs)
         {    # quoted string with embeded escapes
             $value .= $1;
-        } else {
-            my $part = _extract_bracketed( $_ );
+        }
+        else {
+            my $part = _extract_bracketed($_);
             $value .= substr $part, 1, length($part) - 2;    # strip quotes
         }
 
@@ -244,23 +260,21 @@ sub _parse_string {
     return $value;
 }
 
-sub _extract_bracketed
-{
-	for($_[0]) # alias to $_
-	{
-		/\G\s+/cg;
-		my $start = pos($_);
-		my $depth = 0;
-		while(1)
-		{
-			/\G\\./cg && next;
-			/\G\{/cg && (++$depth, next);
-			/\G\}/cg && (--$depth > 0 ? next : last);
-			/\G([^\\\{\}]+)/cg && next; 
-			last; # end of string
-		}
-		return substr($_, $start, pos($_)-$start);
-	}
+sub _extract_bracketed {
+    for ( $_[0] )               # alias to $_
+    {
+        /\G\s+/cg;
+        my $start = pos($_);
+        my $depth = 0;
+        while (1) {
+            /\G\\./cg          && next;
+            /\G\{/cg           && ( ++$depth, next );
+            /\G\}/cg           && ( --$depth > 0 ? next : last );
+            /\G([^\\\{\}]+)/cg && next;
+            last;               # end of string
+        }
+        return substr( $_, $start, pos($_) - $start );
+    }
 }
 
 # Split the $string using $pattern as a delimiter with
@@ -269,41 +283,45 @@ sub _extract_bracketed
 # Return empty list if unmatched braces
 
 sub _split_braced_string {
-    my $string = shift;
+    my $string  = shift;
     my $pattern = shift;
     my @tokens;
-    return () if  $string eq '';
+    return () if $string eq '';
     my $buffer;
-    while (!defined pos $string || pos $string < length $string) {
-    if ( $string =~ /\G(.*?)(\{|$pattern)/cgi ) {
-        my $match = $1;
-        if ( $2 =~ /$pattern/i ) {
-        $buffer .= $match;
-        push @tokens, $buffer;
-        $buffer = "";
-        } elsif ( $2 =~ /\{/ ) {
-        $buffer .= $match . "{";
-        my $numbraces=1;
-        while ($numbraces !=0 && pos $string < length $string) {
-            my $symbol = substr($string, pos $string, 1);
-            $buffer .= $symbol;
-            if ($symbol eq '{') {
-            $numbraces ++;
-            } elsif ($symbol eq '}') {
-            $numbraces --;
+    while ( !defined pos $string || pos $string < length $string ) {
+        if ( $string =~ /\G(.*?)(\{|$pattern)/cgi ) {
+            my $match = $1;
+            if ( $2 =~ /$pattern/i ) {
+                $buffer .= $match;
+                push @tokens, $buffer;
+                $buffer = "";
             }
-            pos($string) ++;
+            elsif ( $2 =~ /\{/ ) {
+                $buffer .= $match . "{";
+                my $numbraces = 1;
+                while ( $numbraces != 0 && pos $string < length $string ) {
+                    my $symbol = substr( $string, pos $string, 1 );
+                    $buffer .= $symbol;
+                    if ( $symbol eq '{' ) {
+                        $numbraces++;
+                    }
+                    elsif ( $symbol eq '}' ) {
+                        $numbraces--;
+                    }
+                    pos($string)++;
+                }
+                if ( $numbraces != 0 ) {
+                    return ();
+                }
+            }
+            else {
+                $buffer .= $match;
+            }
         }
-        if ($numbraces != 0) {
-            return ();
+        else {
+            $buffer .= substr $string, ( pos $string || 0 );
+            last;
         }
-        } else {
-        $buffer .= $match;
-        }
-    } else {
-        $buffer .= substr $string, (pos $string || 0);
-        last;
-    }
     }
     push @tokens, $buffer if $buffer;
     return @tokens;
