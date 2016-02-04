@@ -158,7 +158,9 @@ sub exists {
 
 =head2 rename( $new_path )
 
-Rename file. This involves actual file operations (but not yet).
+Rename file. This involves actual file operations, which means that if the
+entry is not written back to the BibTeX file, things will end up being pretty
+broken.
 
 =cut
 

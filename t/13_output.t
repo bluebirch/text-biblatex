@@ -15,11 +15,11 @@ my $parser = new BibTeX::Parser $fh;
 
 while (my $entry = $parser->next) {
     if($entry->key eq 'key01') {
-	my $result='@ARTICLE{key01,
-    month = {January~1},
-    title = {Title text},
-    author = {Duck, Donald and Else, Someone},
-    year = {1950},
+	my $result='@article{key01,
+  month  = {January~1},
+  title  = {Title text},
+  author = {Donald Duck and Someone Else},
+  year   = {1950},
 }';
     is(compare_entries($entry->to_string,$result),0);
     }

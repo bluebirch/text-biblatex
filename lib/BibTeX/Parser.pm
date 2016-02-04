@@ -153,6 +153,8 @@ sub _parse_next {
             elsif ( $type eq "COMMENT" or $type eq "PREAMBLE" ) {
                 /\G\{./cgo;
                 _slurp_close_bracket;
+                $current_entry->parse_ok(1);
+                return $current_entry;
             }
             else {    # normal entry
                 $current_entry->parse_ok(1);

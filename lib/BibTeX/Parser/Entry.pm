@@ -358,24 +358,32 @@ Returns a text of the BibTeX entry in BibTeX format
 sub to_string {
     my $self = shift;
 
+    # for comment or preamble entries, just dump raw entry
+    if ( $self->type eq 'COMMENT' || $self->type eq 'PREAMBLE' ) {
+        return $self->raw_bibtex;
+    }
+
     # make sure the 'file' field is correct before converting to_string
     if ( $self->{_files} ) {
         $self->{file}
             = join( ';', map { $_->to_string } @{ $self->{_files} } );
     }
     my @fields = grep { !/^_/ } keys %$self;
-    my $result = '@' . $self->type . "{" . $self->key . ",\n";
-    foreach my $field (@fields) {
-        my $value = $self->field($field);
-        if ( $field eq 'author' ) {
-            my @names = ( $self->author );
-            $value = join( ' and ', @names );
+
+    # find longest field
+    my $width = -1;
+    for ( 0 .. $#fields ) {
+        my $len = length( $fields[$_] );
+        if ( $len > $width ) {
+            $width = $len;
         }
-        if ( $field eq 'editor' ) {
-            my @names = ( $self->editor );
-            $value = join( ' and ', @names );
-        }
-        $result .= "    $field = {" . "$value" . "},\n";
+    }
+
+    # build entry from fields
+    my $result = '@' . lc( $self->type ) . "{" . $self->key . ",\n";
+    foreach my $field ( sort @fields ) {
+        $result .= sprintf( "  %-${width}s = {%s},\n", $field,
+            $self->field($field) );
     }
     $result .= "}";
     return $result;
