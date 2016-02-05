@@ -83,7 +83,7 @@ sub new {
             dec => "December",
 
         },
-        line   => -1,
+        line   => 0,
         buffer => "",
     }, $class;
 }
@@ -99,6 +99,7 @@ sub _parse_next {
 
         until (/@/m) {
             my $line = $self->{fh}->getline;
+            $self->{line}++;
             return 0 unless defined $line;
             $_ .= $line;
         }
@@ -116,6 +117,7 @@ sub _parse_next {
             while ( $bracelevel != 0 ) {
                 my $position = pos($_);
                 my $line     = $self->{fh}->getline;
+                $self->{line}++;
                 last unless defined $line;
                 $bracelevel
                     = $bracelevel
@@ -153,6 +155,10 @@ sub _parse_next {
             elsif ( $type eq "COMMENT" or $type eq "PREAMBLE" ) {
                 /\G\{./cgo;
                 _slurp_close_bracket;
+
+                # This is a dirty hack. Change the type to lowercase in the
+                # raw BibTeX.
+                $current_entry->{_raw} =~ s/(?<=@)($re_name)/lc($1)/e;
                 $current_entry->parse_ok(1);
                 return $current_entry;
             }
