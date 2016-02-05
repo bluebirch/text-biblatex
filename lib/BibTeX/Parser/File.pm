@@ -4,8 +4,6 @@ package BibTeX::Parser::File;
 use warnings;
 use strict;
 
-use overload '""' => \&to_string;
-
 =head1 NAME
 
 BibTeX::Parser::File - Contains a single JabRef-style file reference for a
@@ -141,19 +139,9 @@ false otherwise.
 =cut
 
 sub exists {
-    my $self = shift;
-    return $self->{path} && -f $self->{path};
-
-    # if ( $self->{path} ) {
-    #     if ( -f $self->{path} ) {
-    #         return 1;
-    #     }
-    #     else {
-    #         return 0;
-    #     }
-    # }
-    # print STDERR "--> no path?\n";
-    # return 0;
+    my ($self, $basedir) = @_;
+    $basedir = '' unless ($basedir);
+    return $self->{path} && -f $basedir.$self->{path};
 }
 
 =head2 rename( $new_path )

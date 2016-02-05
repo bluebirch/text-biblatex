@@ -6,6 +6,7 @@ use strict;
 
 use BibTeX::Parser;
 use BibTeX::Parser::Author;
+use BibTeX::Parser::File;
 
 =head1 NAME
 
@@ -327,10 +328,9 @@ sub _files {
         return $self->{_files};
     }
     elsif ( $self->has("file") ) {
-        my $files = [];
-        @$files = map { MyBibTeX::Parser::File->new($_) } split m/;/,
+        @{$self->{_files}} = map { BibTeX::Parser::File->new($_) } split m/;/,
             $self->field("file");
-        return $files;
+        return $self->{_files};
     }
     return [];
 }
