@@ -3,6 +3,7 @@ package BibTeX::Parser::DB;
 # ABSTRACT: A database approach to BibTeX files.
 use warnings;
 use strict;
+use locale; # for sorting
 
 use BibTeX::Parser;
 use IO::File;
@@ -154,7 +155,7 @@ Returns undef if no position is specified or position is out of range.
 sub entry {
     my ( $self, $position ) = @_;
     if ( defined $position ) {
-        if ( $position >= 0 && $position < $#{ $self->{entry} } ) {
+        if ( $position >= 0 && $position <= $#{ $self->{entry} } ) {
             $self->{pos} = $position;
             return $self->{entry}->[$position];
         }
@@ -183,6 +184,18 @@ Return current position in database.
 sub pos {
     my $self = shift;
     return $self->{pos};
+}
+
+=head2 sort()
+
+Sort database on author, year, title.
+
+=cut
+
+sub sort {
+    my $self = shift;
+    @{$self->{entry}} = sort { $a->_sortkey() cmp $b->_sortkey() } @{$self->{entry}};
+    $self->{pos} = -1;
 }
 
 =head2 ok()

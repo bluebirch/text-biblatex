@@ -328,7 +328,8 @@ sub _files {
         return $self->{_files};
     }
     elsif ( $self->has("file") ) {
-        @{$self->{_files}} = map { BibTeX::Parser::File->new($_) } split m/;/,
+        @{ $self->{_files} }
+            = map { BibTeX::Parser::File->new($_) } split m/;/,
             $self->field("file");
         return $self->{_files};
     }
@@ -389,4 +390,44 @@ sub to_string {
     return $result;
 }
 
-1;    # End of BibTeX::Entry
+# The following function creates a sort key for sorting.
+
+sub _sortkey {
+    my $self = shift;
+    if ( !$self->{_sortkey} ) {
+
+        # author or editor names
+        my @names;
+        if ( $self->has('author') ) {
+            @names = $self->cleaned_author;
+        }
+        elsif ( $self->has('editor') ) {
+            @names = $self->cleaned_editor;
+        }
+        my $name = lc( join( '', map { $_->sortname } @names ) );
+
+        # year
+        my $year = "";
+        if ( $self->has("date") ) {
+            $year = $self->field("date");
+            $year =~ s/-.*//;
+        }
+        elsif ( $self->has("year") ) {
+            $year = $self->field("year");
+        }
+
+        # title
+        my $title = lc( $self->cleaned_field('title') );
+        $title =~ s/[-\s\.]+//g;    # remove whitespace
+
+        die "no title" unless (defined $title);
+        die "no author" unless (defined $name);
+        die "no year" unless (defined $year);
+
+        # create key
+        $self->{_sortkey} = $name ? $name . $year . $title : $title . $year;
+    }
+    return $self->{_sortkey};
+}
+
+1;                                 # End of BibTeX::Entry

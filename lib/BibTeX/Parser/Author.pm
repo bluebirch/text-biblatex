@@ -360,6 +360,25 @@ sub to_string {
     }
 }
 
+=head2 sortname
+
+Return string as name suitable for sorting.
+
+=cut
+
+use locale;
+
+sub sortname {
+    my $self = shift;
+    my $sortname = $self->last;
+    my $first = $self->first;
+    $sortname .= $first if ($first);
+    $sortname =~ s/[-\s\.]+//g; # remove whitespace
+    return lc( $sortname );
+}
+
+no locale;
+
 # Return 1 if the first letter on brace level 0 is lowercase
 sub _is_von_token {
     my $string = shift;
