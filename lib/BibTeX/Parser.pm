@@ -171,7 +171,7 @@ sub _parse_next {
 
                     # fields
                     while (/\G[\s\n]*($re_name)[\s\n]*=[\s\n]*/cgo) {
-                        $current_entry->field(
+                        $current_entry->_field(
                             $1 => _parse_string( $self->{strings} ) );
                         my $idx = index( $_, ',', pos($_) );
                         pos($_) = $idx + 1 if $idx > 0;

@@ -3,7 +3,7 @@ package BibTeX::Parser::DB;
 # ABSTRACT: A database approach to BibTeX files.
 use warnings;
 use strict;
-use locale; # for sorting
+use locale;    # for sorting
 
 use BibTeX::Parser;
 use IO::File;
@@ -62,6 +62,7 @@ sub open {
         my $parser = BibTeX::Parser->new($fh);
 
         # parse BibTeX file
+        $self->ok(1);
         while ( my $entry = $parser->next ) {
             if ( $entry->parse_ok ) {
 
@@ -73,6 +74,20 @@ sub open {
                 }
                 else {
                     push @{ $self->{entry} }, $entry;
+
+                    # index of keys
+                    if ( !defined $self->{index}->{ $entry->key } ) {
+                        $self->{index}->{ $entry->key }
+                            = $#{ $self->{entry} };
+                    }
+                    else {
+                        $self->error( "Duplicate key "
+                                . $entry->key
+                                . " (line "
+                                . $parser->{line}
+                                . ")" );
+                        last;
+                    }
                 }
             }
             else {
@@ -81,14 +96,37 @@ sub open {
                         . " (line "
                         . $parser->{line}
                         . ")" );
-                return $self->ok;
+                last;
             }
         }
 
         # close file
         $fh->close;
 
-        return $self->ok(1);
+        # Add references to cross-referenced entries. We do this after the
+        # entire file is read so the order in the BibTeX file won't matter.
+        # The original BibTeX specification says that cross-referenced entries
+        # must be placed before any entry that references them, but this way
+        # we don't have to bother about that. If the cross-referenced item
+        # does not exist, just ignore it.
+        for ( my $i = 0; $i <= $#{ $self->{entry} }; $i++ ) {
+            if ( $self->{entry}->[$i]->has('crossref') ) {
+                my $crossref = $self->{entry}->[$i]->field('crossref');
+                if ( defined $self->{index}->{$crossref} ) {
+                    $self->{entry}->[$i]->_field( '_crossref',
+                        $self->{entry}->[ $self->{index}->{$crossref} ] );
+
+                    # printf STDERR "%s (%d) cross-referenced from %s (%d)\n",
+                    #     $crossref, $self->{index}->{$crossref},
+                    #     $self->{entry}->[$i]->key, $i;
+                }
+                else {
+                    print STDERR "Warning: $crossref cross-referenced from ", $self->{entry}->[$i]->key, " not found.\n";
+                }
+            }
+        }
+
+        return $self->ok;
     }
     $self->error("File not found");
     return $self->ok;
@@ -186,6 +224,20 @@ sub pos {
     return $self->{pos};
 }
 
+=head2 lookup( $key )
+
+Lookup entry with specified key in the database.
+
+=cut
+
+sub lookup {
+    my ( $self, $key ) = @_;
+    if ( defined $self->{index}->{$key} ) {
+        return $self->{entry}->[ $self->{index}->{$key} ];
+    }
+    return undef;
+}
+
 =head2 sort()
 
 Sort database on author, year, title.
@@ -194,7 +246,8 @@ Sort database on author, year, title.
 
 sub sort {
     my $self = shift;
-    @{$self->{entry}} = sort { $a->_sortkey() cmp $b->_sortkey() } @{$self->{entry}};
+    @{ $self->{entry} }
+        = sort { $a->_sortkey() cmp $b->_sortkey() } @{ $self->{entry} };
     $self->{pos} = -1;
 }
 

@@ -7,12 +7,11 @@ use strict;
 use BibTeX::Parser;
 use BibTeX::Parser::Author;
 use BibTeX::Parser::File;
+use POSIX qw(strftime);
 
 =head1 NAME
 
 BibTeX::Entry - Contains a single entry of a BibTeX document.
-
-=cut
 
 =head1 SYNOPSIS
 
@@ -33,6 +32,232 @@ by a BibTeX::Parser.
 
         ...
     }
+
+=cut
+
+my %MandatoryFields = (
+    ARTICLE        => [qw(author title journaltitle year/date)],
+    BOOK           => [qw(author title year/date)],
+    MVBOOK         => [qw(author title year/date)],
+    INBOOK         => [qw(author title booktitle year/date)],
+    BOOKINBOOK     => [qw(author title booktitle year/date)],
+    SUPPBOOK       => [qw(author title booktitle year/date)],
+    BOOKLET        => [qw(author/editor title year/date)],
+    COLLECTION     => [qw(editor title year/date)],
+    MVCOLLECTION   => [qw(editor title year/date)],
+    INCOLLECTION   => [qw(author title booktitle year/date)],
+    SUPPCOLLECTION => [qw(author title booktitle year/date)],
+    MANUAL         => [qw(author/editor title year/date)],
+    MISC           => [qw(author/editor title year/date)],
+    ONLINE         => [qw(author/editor title year/date url)],
+    PATENT         => [qw(author title number year/date)],
+    PERIODICAL     => [qw(editor title year/date)],
+    SUPPPERIODICAL => [qw(author title journaltitle year/date)],
+    PROCEEDINGS    => [qw(title year/date)],
+    MVPROCEEDINGS  => [qw(title year/date)],
+    INPROCEEDINGS  => [qw(author title booktitle year/date)],
+    REFERENCE      => [qw(editor title year/date)],
+    MVREFERENCE    => [qw(editor title year/date)],
+    INREFERENCE    => [qw(author title booktitle year/date)],
+    REPORT         => [qw(author title type institution year/date)],
+    SET            => [qw(entryset)],
+    THESIS         => [qw(author title type institution year/date)],
+    UNPUBLISHED    => [qw(author title year/date)],
+    XDATA          => [qw()],
+    CONFERENCE => [qw(author title booktitle year/date)],     # INPROCEEDINGS
+    ELECTRONIC => [qw(author/editor title year/date url)],    # ONLINE
+    MASTERSTHESIS => [qw(author title type institution year/date)],   # THESIS
+    PHDTHESIS     => [qw(author title type institution year/date)],   # THESIS
+    TECHREPORT    => [qw(author title type institution year/date)],   # REPORT
+    WWW           => [qw(author/editor title year/date url)],         # ONLINE
+);
+
+my @Serialisation = (
+    qw(author title subtitle titleaddon
+        editor
+        booktitle booksubtitle booktitleaddon
+        maintitle mainsubtitle maintitleaddon
+        journaltitle journalsubtitle issuetitle
+        publisher institution location
+        year date
+        series volumes volume number pages
+        doi url file)
+);
+
+# Inheritance for cross-referencing. This is tanken from the BibLaTeX manual,
+# appendix B, "Default Inheritance Setup".
+
+my %CrossRefKey = (
+    MVBOOK => {
+        INBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        BOOK => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        BOOKINBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        SUPPBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+
+    },
+    MVCOLLECTION => {
+        COLLECTION => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        INCOLLECTION => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        SUPPCOLLECTION => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    MVREFERENCE => {
+        REFERENCE => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        INREFERENCE => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    MVPROCEEDINGS => {
+        PROCEEDINGS => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        INPROCEEDINGS => {
+            maintitle      => 'title',
+            mainsubtitle   => 'subtitle',
+            maintitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    BOOK => {
+        INBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        BOOKINBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        SUPPBOOK => {
+            author         => 'author',
+            bookauthor     => 'author',
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    COLLECTION => {
+        INCOLLECTION => {
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+        SUPPCOLLECTION => {
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    REFERENCE => {
+        INREFERENCE => {
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    PROCEEDINGS => {
+        INPROCEEDINGS => {
+            booktitle      => 'title',
+            booksubtitle   => 'subtitle',
+            booktitleaddon => 'titleaddon',
+            year           => 'year',
+            date           => 'date',
+        },
+    },
+    PERIODICAL => {
+        ARTICLE => {
+            journaltitle    => 'title',
+            journalsubtitle => 'subtitle',
+            year            => 'year',
+            date            => 'date',
+        },
+        SUPPPERIODICAL => {
+            journaltitle    => 'title',
+            journalsubtitle => 'subtitle',
+            year            => 'year',
+            date            => 'date',
+        },
+    },
+);
 
 =head1 FUNCTIONS
 
@@ -133,7 +358,7 @@ field, the second (optional) value is the new value.
 
 =cut
 
-sub field {
+sub _field {
     if ( scalar @_ == 2 ) {
 
         # get
@@ -144,7 +369,57 @@ sub field {
         my ( $self, $key, $value ) = @_;
         $self->{ lc($key) } = $value;    #_sanitize_field($value);
     }
+}
 
+sub field {
+    my $self = shift;
+    $self->modified(1) if ( scalar @_ > 1 );
+    return $self->_field(@_);
+}
+
+=head2 resolve($name)
+
+Get the contents of a field. If field is not found, any cross-referenced
+entries are checked for that entry as well. Conversions according to BibLaTeX
+with Biber applies: for example, the C<booktitle> field in a C<incollection>
+entry is looked for in the C<title> field in the cross-referenced entry. See
+Appendix B, "Default Inheritance Setup", in the BibLaTeX manual.
+
+=cut
+
+sub resolve {
+    my ( $self, $key ) = @_;
+
+    $key = lc($key);
+    if ( defined $self->{$key} ) {
+        return $self->{$key};
+    }
+    elsif ( $self->{_crossref} ) {
+
+        # print STDERR "## resolve $key for ", $self->key, "\n";
+        # print STDERR "## source type ", $self->{_crossref}->type, " (", $self->{_crossref}->key, ")\n";
+        # print STDERR "## target type ", $self->type, " (", $self->key, ")\n";
+        if ( $CrossRefKey{ $self->{_crossref}->type }{ $self->type }{$key} ) {
+
+            # print STDERR "## source field ", $CrossRefKey{ $self->{_crossref}->type }{ $self->type }{$key}, "\n";
+            return $self->{_crossref}
+                ->{ $CrossRefKey{ $self->{_crossref}->type }{ $self->type }
+                    {$key} };
+        }
+    }
+    return undef;
+}
+
+=head2 remove( $name )
+
+Remove field $name.
+
+=cut
+
+sub remove {
+    my ( $self, $key ) = @_;
+    delete $self->{ lc $key };
+    $self->modified(1);
 }
 
 use LaTeX::ToUnicode qw( convert );
@@ -309,6 +584,21 @@ sub _sanitize_field {
     return $value;
 }
 
+=head2 modified()
+
+Returns true if the entry has been modified (with C<field()> above).
+
+=cut
+
+sub modified {
+    my $self = shift;
+    if (@_) {
+        $self->{_modified} = shift;
+    }
+    $self->{_modified};
+
+}
+
 =head2 files()
 
 Return an array of BibTeX::Parser::File objects.
@@ -334,6 +624,54 @@ sub _files {
         return $self->{_files};
     }
     return [];
+}
+
+=head2 validate
+
+Check internal consistency and other stuff.
+
+=cut
+
+sub validate {
+    my $self = shift;
+    my $type = $self->type;
+
+    $self->{_validate_errors} = [];
+
+    # check mandatory fields
+    $self->{_validated} = 1;
+    if ( $MandatoryFields{$type} ) {
+        foreach my $fields ( @{ $MandatoryFields{$type} } ) {
+            my $has_it;
+            foreach my $field ( split m'/', $fields ) {
+                if ( $self->resolve($field) ) {
+                    $has_it = 1;
+                    last;
+                }
+            }
+            unless ($has_it) {
+                push @{ $self->{_check_errors} },
+                    "missing mandatory field '$fields'";
+                $self->{_validated} = 0;
+            }
+        }
+    }
+    else {
+        push @{ $self->{_check_errors} }, "unknown entry type '$type'";
+        $self->{_validated} = 0;
+    }
+    return $self->{_validated};
+}
+
+=head2 validate_errors()
+
+Return errors occured during validation.
+
+=cut
+
+sub validate_errors {
+    my $self = shift;
+    return wantarray ? @{ $self->{_check_errors} } : $self->{_check_errors};
 }
 
 =head2 raw_bibtex
@@ -371,6 +709,10 @@ sub to_string {
     }
     my @fields = grep { !/^_/ } keys %$self;
 
+    # update timestamp if entry has been modified
+    $self->_field( 'timestamp', strftime( '%Y.%m.%d', localtime ) )
+        if ( $self->modified );
+
     # find longest field
     my $width = -1;
     for ( 0 .. $#fields ) {
@@ -382,9 +724,22 @@ sub to_string {
 
     # build entry from fields
     my $result = '@' . lc( $self->type ) . "{" . $self->key . ",\n";
+
+    my %printed;    # remember which fields are printed
+
+    # serialise fields
+    foreach my $field (@Serialisation) {
+        if ( $self->has($field) ) {
+            $result .= sprintf( "  %-${width}s = {%s},\n",
+                $field, $self->field($field) );
+            $printed{$field} = 1;
+        }
+    }
     foreach my $field ( sort @fields ) {
-        $result .= sprintf( "  %-${width}s = {%s},\n", $field,
-            $self->field($field) );
+        $result
+            .= sprintf( "  %-${width}s = {%s},\n", $field,
+            $self->field($field) )
+            unless ( $printed{$field} );
     }
     $result .= "}";
     return $result;
@@ -407,22 +762,25 @@ sub _sortkey {
         my $name = lc( join( '', map { $_->sortname } @names ) );
 
         # year
-        my $year = "";
-        if ( $self->has("date") ) {
-            $year = $self->field("date");
+        my $year;
+        if ( $year = $self->resolve("date") ) {
             $year =~ s/-.*//;
         }
-        elsif ( $self->has("year") ) {
-            $year = $self->field("year");
+        else {
+            $year = $self->resolve("year");
         }
+        $year = "" unless ($year);
 
         # title
-        my $title = lc( $self->cleaned_field('title') );
-        $title =~ s/[-\s\.]+//g;    # remove whitespace
+        my $title = "";
+        if ( $self->has('title') ) {
+            $title = lc( $self->cleaned_field('title') );
+            $title =~ s/[-\s\.]+//g;    # remove whitespace
+        }
 
-        die "no title" unless (defined $title);
-        die "no author" unless (defined $name);
-        die "no year" unless (defined $year);
+        die "no title"  unless ( defined $title );
+        die "no author" unless ( defined $name );
+        die "no year"   unless ( defined $year );
 
         # create key
         $self->{_sortkey} = $name ? $name . $year . $title : $title . $year;
@@ -430,4 +788,4 @@ sub _sortkey {
     return $self->{_sortkey};
 }
 
-1;                                 # End of BibTeX::Entry
+1;    # End of BibTeX::Entry

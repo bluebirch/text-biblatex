@@ -9,8 +9,6 @@ use strict;
 BibTeX::Parser::File - Contains a single JabRef-style file reference for a
 BibTeX document
 
-=cut
-
 =head1 SYNOPSIS
 
 This class is a wrapper for a single JabRef-style file reference. It is
@@ -52,7 +50,9 @@ In normal cases, C<parse()> is called from C<new()>.
 sub parse {
     my ( $self, $jabref_file_string ) = @_;
 
-    if ($jabref_file_string && $jabref_file_string =~ m/^[^:]*:[^:]+:[^:]+$/) {
+    if (   $jabref_file_string
+        && $jabref_file_string =~ m/^[^:]*:[^:]+:[^:]+$/ )
+    {
 
         # Jabref store file links in three parts delimited by colon
         ( $self->{description}, $self->{path}, $self->{type} ) = split m/:/,
@@ -139,9 +139,9 @@ false otherwise.
 =cut
 
 sub exists {
-    my ($self, $basedir) = @_;
+    my ( $self, $basedir ) = @_;
     $basedir = '' unless ($basedir);
-    return $self->{path} && -f $basedir.$self->{path};
+    return $self->{path} && -f $basedir . $self->{path};
 }
 
 =head2 rename( $new_path )
