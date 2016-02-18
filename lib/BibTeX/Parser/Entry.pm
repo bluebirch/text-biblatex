@@ -418,8 +418,18 @@ Remove field $name.
 
 sub remove {
     my ( $self, $key ) = @_;
-    delete $self->{ lc $key };
-    $self->modified(1);
+    $self->_remove( @_ ) && $self->modified(1);
+}
+
+# a version of _remove that does not update modified flag
+
+sub _remove {
+    my ( $self, $key ) = @_;
+    if ($self->has($key)) {
+        delete $self->{ lc $key };
+        return 1;        
+    }
+    return 0;
 }
 
 use LaTeX::ToUnicode qw( convert );
@@ -730,19 +740,29 @@ sub to_string {
     # serialise fields
     foreach my $field (@Serialisation) {
         if ( $self->has($field) ) {
-            $result .= sprintf( "  %-${width}s = {%s},\n",
-                $field, $self->field($field) );
+            $result
+                .= _field_to_string( $field, $self->field($field), $width );
             $printed{$field} = 1;
         }
     }
     foreach my $field ( sort @fields ) {
-        $result
-            .= sprintf( "  %-${width}s = {%s},\n", $field,
-            $self->field($field) )
+        $result .= _field_to_string( $field, $self->field($field), $width )
             unless ( $printed{$field} );
     }
     $result .= "}";
     return $result;
+}
+
+sub _field_to_string {
+    my ( $field, $value, $width ) = @_;
+    if ( $value =~ m/^\d+$/ ) {
+        # numeric values is printed without brackets
+        return sprintf( "  %-${width}s = %d,\n", $field, $value );
+    }
+    else {
+        # anything else is put within brackets
+        return sprintf( "  %-${width}s = {%s},\n", $field, $value );
+    }
 }
 
 # The following function creates a sort key for sorting.
