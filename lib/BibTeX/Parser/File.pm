@@ -156,8 +156,10 @@ sub rename {
     my ( $self, $new_path ) = @_;
 
     # If file names are equal, do nothing and just return true.
-    if ( $^O eq 'linux' && $new_path eq $self->{path} ) {
-        return 1;
+    if ( $^O eq 'linux' ) {
+        if ( $new_path eq $self->{path} ) {
+            return 1;
+        }
     }
 
     # On non-linux system, we DO NOT rename files where only case has changed.
@@ -169,7 +171,7 @@ sub rename {
     # If the currently stored path points to an existing file and the latter
     # does not, rename the former to the latter. (I guess I should add some
     # sanity controls here.)
-    elsif ( $self->exists && !-f $new_path && $new_path !~ m/[!:;*"?\0]/ ) {
+    if ( $self->exists && !-f $new_path && $new_path !~ m/[!:;*"?\0]/ ) {
         if ( rename $self->{path}, $new_path ) {
             $self->path($new_path);
             return 1;
