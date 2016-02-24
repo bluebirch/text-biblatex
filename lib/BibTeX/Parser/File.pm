@@ -155,10 +155,14 @@ broken.
 sub rename {
     my ( $self, $new_path ) = @_;
 
-    # If file names are equal, do nothing and just return true. We DO NOT
-    # rename files where only case has changed. Otherwise, this would cause
-    # trouble with Mac and Windows file systems.
-    if ( lc $new_path eq lc $self->{path} ) {
+    # If file names are equal, do nothing and just return true.
+    if ( $^O eq 'linux' && $new_path eq $self->{path} ) {
+        return 1;
+    }
+
+    # On non-linux system, we DO NOT rename files where only case has changed.
+    # Otherwise, this would cause trouble with Mac and Windows file systems.
+    elsif ( lc $new_path eq lc $self->{path} ) {
         return 1;
     }
 
