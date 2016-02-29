@@ -417,17 +417,17 @@ Remove field $name.
 =cut
 
 sub remove {
-    my ( $self, $key ) = @_;
-    $self->_remove( @_ ) && $self->modified(1);
+    my $self = shift;
+    $self->_remove(@_) && $self->modified(1);
 }
 
 # a version of _remove that does not update modified flag
 
 sub _remove {
     my ( $self, $key ) = @_;
-    if ($self->has($key)) {
+    if ( $self->has($key) ) {
         delete $self->{ lc $key };
-        return 1;        
+        return 1;
     }
     return 0;
 }
@@ -755,8 +755,9 @@ sub to_string {
 
 sub _field_to_string {
     my ( $field, $value, $width ) = @_;
-    if ( $value =~ m/^\d+$/ ) {
-        # numeric values is printed without brackets
+    if ( $value =~ m/^[1-9][0-9]*$/ ) {
+
+        # numeric values (not beginning with zero) is printed without brackets
         return sprintf( "  %-${width}s = %d,\n", $field, $value );
     }
     else {
