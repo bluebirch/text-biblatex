@@ -360,8 +360,6 @@ field, the second (optional) value is the new value.
 
 sub _field {
     if ( scalar @_ == 2 ) {
-
-        # get
         my ( $self, $field ) = @_;
         return $self->{ lc($field) };
     }
@@ -604,9 +602,9 @@ sub modified {
     my $self = shift;
     if (@_) {
         $self->{_modified} = shift;
+        print STDERR $self->key, " is modified\n";
     }
-    $self->{_modified};
-
+    return $self->{_modified};
 }
 
 =head2 files()
@@ -717,11 +715,13 @@ sub to_string {
         $self->{file}
             = join( ';', map { $_->to_string } @{ $self->{_files} } );
     }
-    my @fields = grep { !/^_/ } keys %$self;
 
     # update timestamp if entry has been modified
     $self->_field( 'timestamp', strftime( '%Y.%m.%d', localtime ) )
         if ( $self->modified );
+
+    # get fields in entry
+    my @fields = grep { !/^_/ } keys %$self;
 
     # find longest field
     my $width = -1;
