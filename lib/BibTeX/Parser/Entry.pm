@@ -602,7 +602,6 @@ sub modified {
     my $self = shift;
     if (@_) {
         $self->{_modified} = shift;
-        print STDERR $self->key, " is modified\n";
     }
     return $self->{_modified};
 }
