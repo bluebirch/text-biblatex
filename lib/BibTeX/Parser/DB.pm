@@ -150,6 +150,9 @@ sub write {
         my $fh = IO::File->new( $file, "w" );
         $fh->binmode(":utf8");
 
+        # write header (this is unnecessary, but avoids a bug in JabRef 3.2)
+        print $fh "% Encoding: UTF-8\n\n";
+
         # write preambles
         foreach my $entry ( @{ $self->{preamble} } ) {
             print $fh $entry->to_string, "\n\n";
