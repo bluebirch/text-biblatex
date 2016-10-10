@@ -4,28 +4,28 @@ use Test::More tests => 25;
 
 use strict;
 use IO::File;
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 my $fh = IO::File->new("t/bibs/06.bib");
 
-my $parser = new BibTeX::Parser $fh;
+my $parser = new Text::BibLaTeX::Parser $fh;
 
 
 # first entry is a preamble
 my $entry = $parser->next;
-isa_ok($entry, 'BibTeX::Parser::Entry', "Correct type");
+isa_ok($entry, 'Text::BibLaTeX::Entry', "Correct type");
 ok($entry->parse_ok, "Entry parsed correctly");
 is($entry->type, "PREAMBLE", "BibTeX type is correct");
 
 # second is a comment
 $entry = $parser->next;
-isa_ok($entry, 'BibTeX::Parser::Entry', "Correct type");
+isa_ok($entry, 'Text::BibLaTeX::Entry', "Correct type");
 ok($entry->parse_ok, "Entry parsed correctly");
 is($entry->type, "COMMENT", "BibTeX type is correct");
 
 # then comes the other stuff
 $entry = $parser->next;
-isa_ok($entry, 'BibTeX::Parser::Entry', "Correct type");
+isa_ok($entry, 'Text::BibLaTeX::Entry', "Correct type");
 ok($entry->parse_ok, "Entry parsed correctly");
 is($entry->type, "ARTICLE", "BibTeX type is correct");
 is($entry->field("title"), "Paper title", "Title attribute");
@@ -46,7 +46,7 @@ is_deeply(
 	['Ludwig', 'van', 'Beethoven', undef], "author correct");
 
 $entry = $parser->next;
-isa_ok($entry, 'BibTeX::Parser::Entry', "Correct type");
+isa_ok($entry, 'Text::BibLaTeX::Entry', "Correct type");
 ok($entry->parse_ok, "Entry parsed correctly");
 is($entry->type, "BOOK", "BibTeX type is correct");
 is($entry->field("title"), "Book title", "Title attribute");

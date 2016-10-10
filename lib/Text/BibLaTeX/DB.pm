@@ -1,4 +1,4 @@
-package BibTeX::Parser::DB;
+package Text::BibLaTeX::DB;
 
 # ABSTRACT: A database approach to BibTeX files.
 use warnings;
@@ -7,20 +7,20 @@ use locale;    # for sorting
 
 #use Unicode::Collate;
 
-use BibTeX::Parser;
+use Text::BibLaTeX::Parser;
 use IO::File;
 
 use Data::Dumper;
 
 =head1 NAME
 
-BibTeX::Parser::DB - A database-like wrapper around L<BibTeX::Parser>.
+Text::BibLaTeX::DB - A database-like wrapper around L<BibTeX::Parser>.
 
 =head1 SYNOPSIS
 
-    use BibTeX::Parser::DB;
+    use Text::BibLaTeX::DB;
 
-    my $db = BibTeX::Parser::File->new( "bibliography.bib" );    
+    my $db = Text::BibLaTeX::DB->new( "bibliography.bib" );    
 
 =head1 FUNCTIONS
 
@@ -61,7 +61,7 @@ sub open {
 
         # ensure UTF-8 encoding
         $fh->binmode(":utf8");
-        my $parser = BibTeX::Parser->new($fh);
+        my $parser = Text::BibLaTeX::Parser->new($fh);
 
         # parse BibTeX file
         $self->ok(1);
@@ -162,7 +162,7 @@ sub entries {
 
 =head2 entry( $position )
 
-Return entry at position C<$position> as a L<BibTeX::Parser::Entry> object.
+Return entry at position C<$position> as a L<Text::BibLaTeX::Entry> object.
 Returns undef if no position is specified or position is out of range.
 
 =cut
@@ -180,7 +180,7 @@ sub entry {
 
 =head2 next()
 
-Return next entry as a L<BibTeX::Parser::Entry> object, undef if there are no
+Return next entry as a L<Text::BibLaTeX::Entry> object, undef if there are no
 (more) entries.
 
 =cut
@@ -234,7 +234,7 @@ sub sort {
 
 =head2 add( $entry )
 
-Add L<BibTeX::Parser::Entry> to database.
+Add L<Text::BibLaTeX::Entry> to database.
 
 =cut
 

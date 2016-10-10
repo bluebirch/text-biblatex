@@ -2,7 +2,7 @@
 
 use Test::More; 
 
-use BibTeX::Parser::Author;
+use Text::BibLaTeX::Author;
 
 # Names from Mittelbach, Goossens: The LaTeX Companion, Second Edition.
 my %names = (
@@ -43,9 +43,9 @@ my %names = (
 
 plan tests => (keys(%names) * 6 + 5);
 
-my $author = new BibTeX::Parser::Author;
+my $author = new Text::BibLaTeX::Author;
 
-isa_ok($author, "BibTeX::Parser::Author", "Correct type");
+isa_ok($author, "Text::BibLaTeX::Author", "Correct type");
 
 is($author->first, undef, "Initial state 'first'");
 is($author->von,   undef, "Initial state 'von'");
@@ -55,11 +55,11 @@ is($author->jr,    undef, "Initial state 'jr'");
 
 foreach my $name (keys %names) {
 
-	is_deeply([BibTeX::Parser::Author->split($name)], $names{$name}, $name =~ /\w/  ? $name : "whitespace name: '$name'" );
+	is_deeply([Text::BibLaTeX::Author->split($name)], $names{$name}, $name =~ /\w/  ? $name : "whitespace name: '$name'" );
 
-	$author = new BibTeX::Parser::Author $name;
+	$author = new Text::BibLaTeX::Author $name;
 
-	isa_ok($author, "BibTeX::Parser::Author");
+	isa_ok($author, "Text::BibLaTeX::Author");
 
 	is($author->first, $names{$name}->[0] );
 	is($author->von,   $names{$name}->[1]);

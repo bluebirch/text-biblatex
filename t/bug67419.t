@@ -2,11 +2,11 @@
 
 use Test::More;
 
-use BibTeX::Parser;
+use Text::BibLaTeX;
 use IO::File;
 
 my $fh = new IO::File "t/bibs/braces.bib", "r" ;
-my $parser = new BibTeX::Parser $fh;
+my $parser = new Text::BibLaTeX::Parser $fh;
 while (my $entry=$parser->next) {
     is($entry->parse_ok,1);
     if ($entry->key eq 'scholkopf98kpca') {

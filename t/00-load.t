@@ -1,11 +1,10 @@
 #!/usr/bin/perl -w
 
-use Test::More tests => 3;
+use Test::More tests => 6;
 
-BEGIN {
-	use_ok( 'BibTeX::Parser' );
-	use_ok( 'BibTeX::Parser::Author' );
-	use_ok( 'BibTeX::Parser::Entry' );
-}
-
-diag( "Testing BibTeX::Parser $BibTeX::Parser::VERSION, Perl $], $^X" );
+BEGIN { use_ok( 'Text::BibLaTeX::Author' ); }
+BEGIN { use_ok( 'Text::BibLaTeX::File' ); }
+BEGIN { use_ok( 'Text::BibLaTeX::Entry' ); }
+BEGIN { use_ok( 'Text::BibLaTeX::Parser' ); }
+BEGIN { use_ok( 'Text::BibLaTeX::DB' ); }
+BEGIN { use_ok( 'Text::BibLaTeX' ); }

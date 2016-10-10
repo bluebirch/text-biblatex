@@ -2,17 +2,17 @@
 
 use Test::More;
 
-use BibTeX::Parser;
+use Text::BibLaTeX;
 use IO::File;
 
 {
     my $fh = new IO::File "t/bibs/endnote.txt", "r" ;
 
     if (defined $fh) {
-	    my $parser = new BibTeX::Parser $fh;
+	    my $parser = new Text::BibLaTeX::Parser $fh;
 
 	    while (my $entry = $parser->next) {
-		    isa_ok($entry, "BibTeX::Parser::Entry");
+		    isa_ok($entry, "Text::BibLaTeX::Entry");
 		    ok($entry->parse_ok, "parse_ok");
 		    is($entry->key, undef, "key");
 		    is($entry->type, "ARTICLE", "type");
@@ -27,11 +27,11 @@ use IO::File;
     my @keys = qw(MR2254280 MR2254274 MR2248052);
 
     if (defined $fh) {
-	    my $parser = new BibTeX::Parser $fh;
+	    my $parser = new Text::BibLaTeX::Parser $fh;
 	    my $count = 0;
 
 	    while (my $entry = $parser->next) {
-		    isa_ok($entry, "BibTeX::Parser::Entry");
+		    isa_ok($entry, "Text::BibLaTeX::Entry");
 		    ok($entry->parse_ok, "parse_ok");
 		    is($entry->key, $keys[$count], "key");
 		    is($entry->type, "ARTICLE", "type");
@@ -52,11 +52,11 @@ use IO::File;
     my @years = qw( 1997 1997 2002 2002 );
 
     if (defined $fh) {
-	    my $parser = new BibTeX::Parser $fh;
+	    my $parser = new Text::BibLaTeX::Parser $fh;
 	    my $count = 0;
 
 	    while (my $entry = $parser->next) {
-		    isa_ok($entry, "BibTeX::Parser::Entry");
+		    isa_ok($entry, "Text::BibLaTeX::Entry");
 		    ok($entry->parse_ok, "parse_ok");
 		    is($entry->key, $keys[$count], "key");
 		    is($entry->type, uc $types[$count], "type");

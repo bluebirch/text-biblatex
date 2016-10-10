@@ -2,12 +2,12 @@
 
 use Test::More tests => 13;
 
-use BibTeX::Parser::Entry;
+use Text::BibLaTeX::Entry;
 
 
-my $entry = new BibTeX::Parser::Entry("type", "key", 1, {title => "title"});
+my $entry = new Text::BibLaTeX::Entry("type", "key", 1, {title => "title"});
 
-isa_ok($entry, "BibTeX::Parser::Entry");
+isa_ok($entry, "Text::BibLaTeX::Entry");
 
 is($entry->type, "TYPE", "Entry::type get");
 

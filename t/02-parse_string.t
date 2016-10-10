@@ -2,7 +2,7 @@
 
 use Test::More tests => 7;
 
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 my %strings = ();
 
@@ -31,9 +31,9 @@ $_ = '"M{\"{u}}nchen"';
 parse_is('M{\"{u}}nchen', "- escaped quote");
 
 sub parse_ok {
-	is(BibTeX::Parser::_parse_string(\%strings), $_, shift);
+	is(Text::BibLaTeX::Parser::_parse_string(\%strings), $_, shift);
 }
 
 sub parse_is {
-	is(BibTeX::Parser::_parse_string(\%strings), shift, shift);
+	is(Text::BibLaTeX::Parser::_parse_string(\%strings), shift, shift);
 }

@@ -2,11 +2,11 @@
 
 use Test::More tests => 31;
 
-use BibTeX::Parser::File;
+use Text::BibLaTeX::File;
 
-my $file = new BibTeX::Parser::File("description:path/to/file.pdf:PDF");
+my $file = new Text::BibLaTeX::File("description:path/to/file.pdf:PDF");
 
-isa_ok( $file, "BibTeX::Parser::File" );
+isa_ok( $file, "Text::BibLaTeX::File" );
 
 is( $file->parse_ok, 1, "File::parse_ok valid entry" );
 
@@ -58,7 +58,7 @@ is( $file->parse(":file.pdf:PDF:"),   undef, "File::parse invalid entry" );
 is( $file->parse(":::"),              undef, "File::parse invalid entry" );
 
 # test complete parsing
-use BibTeX::Parser;
+use Text::BibLaTeX;
 use IO::String;
 
 my $string = q|@article{AhujaCarley1999,
@@ -73,7 +73,7 @@ my $string = q|@article{AhujaCarley1999,
 }|;
 my $fh = IO::String->new($string);
 
-my $parser = BibTeX::Parser->new($fh);
+my $parser = Text::BibLaTeX::Parser->new($fh);
 
 my $entry = $parser->next;
 
@@ -99,7 +99,7 @@ is_deeply(
 my @files = $entry->files;
 
 is( scalar @files, 1, "Entry::files parsed files" );
-isa_ok( $files[0], "BibTeX::Parser::File", "Entry::files correct type" );
+isa_ok( $files[0], "Text::BibLaTeX::File", "Entry::files correct type" );
 is_deeply(
     $files[0],
     {   parse_ok    => 1,

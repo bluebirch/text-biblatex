@@ -1,16 +1,16 @@
-package BibTeX::Parser;
+package Text::BibLaTeX::Parser;
 
 # ABSTRACT: A pure perl BibTeX parser
 use warnings;
 use strict;
 
-use BibTeX::Parser::Entry;
+use Text::BibLaTeX::Entry;
 
 =for stopwords jr von
 
 =head1 NAME
 
-BibTeX::Parser - A pure perl BibTeX parser
+Text::BibLaTeX::Parser - A pure perl BibTeX parser
 
 =cut
 
@@ -21,13 +21,13 @@ my $re_name     = qr/$re_namechar+/o;
 
 Parses BibTeX files.
 
-    use BibTeX::Parser;
+    use Text::BibLaTeX::Parser;
     use IO::File;
 
     my $fh     = IO::File->new("filename");
 
     # Create parser object ...
-    my $parser = BibTeX::Parser->new($fh);
+    my $parser = Text::BibLaTeX::Parser->new($fh);
     
     # ... and iterate over entries
     while (my $entry = $parser->next ) {
@@ -104,7 +104,7 @@ sub _parse_next {
             $_ .= $line;
         }
 
-        my $current_entry = new BibTeX::Parser::Entry;
+        my $current_entry = new Text::BibLaTeX::Entry;
         if (/@($re_name)/cgo) {
             my $type = uc $1;
             $current_entry->type($type);
@@ -335,12 +335,12 @@ sub _split_braced_string {
     return @tokens;
 }
 
-1;    # End of BibTeX::Parser
+1;    # End of Text::BibLaTeX::Parser
 
 =head1 NOTES
 
 The fields C<author> and C<editor> are canonized, see
-L<BibTeX::Parser::Author>
+L<Text::BibLaTeX::Author>
 
 
 =head1 SEE ALSO
@@ -349,11 +349,11 @@ L<BibTeX::Parser::Author>
 
 =item 
 
-L<BibTeX::Parser::Entry>
+L<Text::BibLaTeX::Entry>
 
 =item 
 
-L<BibTeX::Parser::Author>
+L<Text::BibLaTeX::Author>
 
 =back
 

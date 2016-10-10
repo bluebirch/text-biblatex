@@ -2,9 +2,9 @@
 
 use Test::More tests => 1;
 
-use BibTeX::Parser::DB;
+use Text::BibLaTeX::DB;
 
-my $db = new BibTeX::Parser::DB;
+my $db = new Text::BibLaTeX::DB;
 
-isa_ok( $db, "BibTeX::Parser::DB" );
+isa_ok( $db, "Text::BibLaTeX::DB" );
 

@@ -3,12 +3,12 @@
 use Test::More tests => 1;
 
 use IO::File;
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 
 my $fh = IO::File->new('t/bibs/09-complex.bib');
 
-my $parser = new BibTeX::Parser $fh;
+my $parser = new Text::BibLaTeX::Parser $fh;
 
 #my @result = BibTeX::Parser->_parse($fh);
 

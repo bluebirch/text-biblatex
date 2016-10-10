@@ -1,16 +1,16 @@
-package BibTeX::Parser::Author;
+package Text::BibLaTeX::Author;
 
 # ABSTRACT: Contains a single author for a BibTeX document
 use warnings;
 use strict;
 
-use BibTeX::Parser;
+use Text::BibLaTeX::Parser;
 
 use overload '""' => \&to_string;
 
 =head1 NAME
 
-BibTeX::Parser::Author - Contains a single author for a BibTeX document.
+Text::BibLaTeX::Author - Contains a single author for a BibTeX document.
 
 =cut
 
@@ -20,9 +20,9 @@ This class ist a wrapper for a single BibTeX author. It is usually created
 by a BibTeX::Parser.
 
 
-    use BibTeX::Parser::Author;
+    use Text::BibLaTeX::Author;
 
-    my $entry = BibTeX::Parser::Author->new($full_name);
+    my $entry = Text::BibLaTeX::Author->new($full_name);
     
     my $firstname = $author->first;
     my $von       = $author->von;
@@ -122,7 +122,7 @@ sub split {
         return ( undef, undef, undef, undef );
     }
 
-    my @comma_separated = BibTeX::Parser::_split_braced_string( $name, '\s*,\s*' );
+    my @comma_separated = Text::BibLaTeX::Parser::_split_braced_string( $name, '\s*,\s*' );
     if ( scalar(@comma_separated) == 0 ) {
 
         # Error?
@@ -137,7 +137,7 @@ sub split {
     if ( scalar(@comma_separated) == 1 ) {
 
         # First von Last form
-        my @tokens = BibTeX::Parser::_split_braced_string( $name, '\s+' );
+        my @tokens = Text::BibLaTeX::Parser::_split_braced_string( $name, '\s+' );
         if ( !scalar(@tokens) ) {
             return ( undef, undef, undef, undef );
         }
@@ -154,16 +154,16 @@ sub split {
 
     # Now we work with von Last, [Jr,] First form
     if ( scalar @comma_separated == 2 ) {    # no jr
-        my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
+        my @tokens = Text::BibLaTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
         $first = join( ' ', @tokens );
     }
     else {                                   # jr is present
-        my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
+        my @tokens = Text::BibLaTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
         $jr = join( ' ', @tokens );
-        @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[2], '\s+' );
+        @tokens = Text::BibLaTeX::Parser::_split_braced_string( $comma_separated[2], '\s+' );
         $first = join( ' ', @tokens );
     }
-    my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[0], '\s+' );
+    my @tokens = Text::BibLaTeX::Parser::_split_braced_string( $comma_separated[0], '\s+' );
     my $start_last = _getStartLast(@tokens);
     if ( $start_last > 0 ) {
         $von = join( ' ', splice( @tokens, 0, $start_last ) );
@@ -416,7 +416,7 @@ sub _is_von_token {
 
 }
 
-1;    # End of BibTeX::Parser::Author
+1;    # End of Text::BibLaTeX::Author
 
 =head1 NOTES
 

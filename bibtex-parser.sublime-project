@@ -5,12 +5,19 @@
             "path": "."
         },
         {
-            "path": "lib/BibTeX",
+            "path": "lib/Text",
             "name": "Source"
         },
         {
             "path": "t",
             "name": "Tests"
+        }
+    ],
+   "build_systems": [
+        {
+            "name": "Run tests",
+            "shell_cmd": "dzil test",
+            "working_dir": "$project_path"
         }
     ]
 }

@@ -3,7 +3,7 @@
 use Test::More tests => 2;
 
 use IO::String;
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 {
     my $string = q|@article{lin1973,
@@ -16,7 +16,7 @@ use BibTeX::Parser;
     }|;
     my $fh = IO::String->new($string);
 
-    my $parser = BibTeX::Parser->new( $fh );
+    my $parser = Text::BibLaTeX::Parser->new( $fh );
 
 #my @result = BibTeX::Parser->_parse($fh);
 
@@ -44,7 +44,7 @@ use BibTeX::Parser;
 }|;
     my $fh = IO::String->new($string);
 
-    my $parser = BibTeX::Parser->new( $fh );
+    my $parser = Text::BibLaTeX::Parser->new( $fh );
 
     my $entry = $parser->next;
 

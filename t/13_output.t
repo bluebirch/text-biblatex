@@ -2,13 +2,13 @@
 
 use Test::More;
 
-use BibTeX::Parser;
+use Text::BibLaTeX;
 use IO::File;
 
 
 my $fh = new IO::File "t/bibs/01.bib", "r" ;
 
-my $parser = new BibTeX::Parser $fh;
+my $parser = new Text::BibLaTeX::Parser $fh;
 
 
 

@@ -1,4 +1,4 @@
-package BibTeX::Parser::File;
+package Text::BibLaTeX::File;
 
 # ABSTRACT: Contains a single JabRef-style file reference for a BibTeX document
 use warnings;
@@ -6,7 +6,7 @@ use strict;
 
 =head1 NAME
 
-BibTeX::Parser::File - Contains a single JabRef-style file reference for a
+Text::BibLaTeX::File - Contains a single JabRef-style file reference for a
 BibTeX document
 
 =head1 SYNOPSIS
@@ -14,9 +14,9 @@ BibTeX document
 This class is a wrapper for a single JabRef-style file reference. It is
 usually created by a BibTeX::Parser.
 
-    use BibTeX::Parser::File;
+    use Text::BibLaTeX::File;
 
-    my $entry = BibTeX::Parser::File->new($jabref_file_specification);    
+    my $entry = Text::BibLaTeX::File->new($jabref_file_specification);    
 
 =head1 FUNCTIONS
 

@@ -5,10 +5,10 @@ use warnings;
 use utf8;
 
 use Test::More;
-use BibTeX::Parser::Entry;
+use Text::BibLaTeX::Entry;
 
 sub new_entry {
-    BibTeX::Parser::Entry->new( 'ARTICLE', 'Foo2010', 1, { @_ } );
+    Text::BibLaTeX::Entry->new( 'ARTICLE', 'Foo2010', 1, { @_ } );
 }
 {
     my @german_tests = (

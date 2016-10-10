@@ -3,13 +3,11 @@
 use Test::More tests => 11;
 
 use IO::File;
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 my $fh = IO::File->new('t/bibs/10-funnyname.bib');
 
-my $parser = BibTeX::Parser->new($fh);
-
-#my @result = BibTeX::Parser->_parse($fh);
+my $parser = Text::BibLaTeX::Parser->new($fh);
 
 my $entry = $parser->next;
 

@@ -1,12 +1,12 @@
-package BibTeX::Parser::Entry;
+package Text::BibLaTeX::Entry;
 
 # ABSTRACT: Contains a single entry of a BibTeX document
 use warnings;
 use strict;
 
-use BibTeX::Parser;
-use BibTeX::Parser::Author;
-use BibTeX::Parser::File;
+use Text::BibLaTeX::Parser;
+use Text::BibLaTeX::Author;
+use Text::BibLaTeX::File;
 use POSIX qw(strftime);
 
 =head1 NAME
@@ -16,12 +16,12 @@ BibTeX::Entry - Contains a single entry of a BibTeX document.
 =head1 SYNOPSIS
 
 This class ist a wrapper for a single BibTeX entry. It is usually created
-by a BibTeX::Parser.
+by a Text::BibLaTeX::Parser.
 
 
-    use BibTeX::Parser::Entry;
+    use Text::BibLaTeX::Entry;
 
-    my $entry = BibTeX::Parser::Entry->new($type, $key, $parse_ok, \%fields);
+    my $entry = Text::BibLaTeX::Entry->new($type, $key, $parse_ok, \%fields);
     
     if ($entry->parse_ok) {
         my $type    = $entry->type;
@@ -448,7 +448,7 @@ sub cleaned_field {
 
 =head2 cleaned_author
 
-Get an array of L<BibTeX::Parser::Author> objects for the authors of this
+Get an array of L<Text::BibLaTeX::Author> objects for the authors of this
 entry. Each name has been cleaned of accents and braces.
 
 =cut
@@ -460,7 +460,7 @@ sub cleaned_author {
 
 =head2 cleaned_editor
 
-Get an array of L<BibTeX::Parser::Author> objects for the editors of this
+Get an array of L<Text::BibLaTeX::Author> objects for the editors of this
 entry. Each name has been cleaned of accents and braces.
 
 =cut
@@ -474,7 +474,7 @@ sub _handle_cleaned_author_editor {
     my ( $self, $authors, @options ) = @_;
     map {
         my $author     = $_;
-        my $new_author = BibTeX::Parser::Author->new;
+        my $new_author = Text::BibLaTeX::Author->new;
         map { $new_author->$_( convert( $author->$_, @options ) ) }
             grep { defined $author->$_ } qw( first von last jr );
         $new_author;
@@ -491,13 +491,13 @@ sub _handle_author_editor {
                             # my @names = split /\s+and\s+/i, $_[0];
             $_[0] =~ s/^\s*//;
             $_[0] =~ s/\s*$//;
-            my @names = BibTeX::Parser::_split_braced_string( $_[0], '\s+and\s+' );
+            my @names = Text::BibLaTeX::Parser::_split_braced_string( $_[0], '\s+and\s+' );
             if ( !scalar @names ) {
                 $self->error('Bad names in author/editor field');
                 return;
             }
             $self->{"_$type"}
-                = [ map { new BibTeX::Parser::Author $_} @names ];
+                = [ map { new Text::BibLaTeX::Author $_} @names ];
             $self->field( $type, join " and ", @{ $self->{"_$type"} } );
         }
         else {
@@ -507,7 +507,7 @@ sub _handle_author_editor {
                     push @{ $self->{"_$type"} }, $param;
                 }
                 else {
-                    push @{ $self->{"_$type"} }, new BibTeX::Parser::Author $param;
+                    push @{ $self->{"_$type"} }, new Text::BibLaTeX::Author $param;
                 }
 
                 $self->field( $type, join " and ", @{ $self->{"_$type"} } );
@@ -516,9 +516,9 @@ sub _handle_author_editor {
     }
     else {
         unless ( defined $self->{"_$type"} ) {
-            my @names = BibTeX::Parser::_split_braced_string( $self->{$type} || "", '\s+and\s+' );
+            my @names = Text::BibLaTeX::Parser::_split_braced_string( $self->{$type} || "", '\s+and\s+' );
             $self->{"_$type"}
-                = [ map { new BibTeX::Parser::Author $_} @names ];
+                = [ map { new Text::BibLaTeX::Author $_} @names ];
         }
         return @{ $self->{"_$type"} };
     }
@@ -634,7 +634,7 @@ sub modified {
 
 =head2 files()
 
-Return an array of BibTeX::Parser::File objects.
+Return an array of Text::BibLaTeX::File objects.
 
 =cut
 
@@ -643,7 +643,7 @@ sub files {
     return @{ $self->_files };
 }
 
-# Return an array reference of BibTeX::Parser::File objects.
+# Return an array reference of Text::BibLaTeX::File objects.
 
 sub _files {
     my $self = shift;
@@ -652,7 +652,7 @@ sub _files {
     }
     elsif ( $self->has("file") ) {
         @{ $self->{_files} }
-            = map { BibTeX::Parser::File->new($_) } split m/;/,
+            = map { Text::BibLaTeX::File->new($_) } split m/;/,
             $self->field("file");
         return $self->{_files};
     }

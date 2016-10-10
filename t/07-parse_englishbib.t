@@ -4,12 +4,12 @@ use Test::More tests => 8;
 
 use strict;
 use IO::File;
-use BibTeX::Parser;
+use Text::BibLaTeX;
 
 
 my $fh = IO::File->new("t/bibs/english.bib");
 
-my $parser = new BibTeX::Parser $fh;
+my $parser = new Text::BibLaTeX::Parser $fh;
 
 my $count = 0;
 
