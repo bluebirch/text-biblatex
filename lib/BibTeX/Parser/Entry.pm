@@ -64,12 +64,12 @@ my %MandatoryFields = (
     THESIS         => [qw(author title type institution year/date)],
     UNPUBLISHED    => [qw(author title year/date)],
     XDATA          => [qw()],
-    CONFERENCE => [qw(author title booktitle year/date)],     # INPROCEEDINGS
-    ELECTRONIC => [qw(author/editor title year/date url)],    # ONLINE
-    MASTERSTHESIS => [qw(author title type institution year/date)],   # THESIS
-    PHDTHESIS     => [qw(author title type institution year/date)],   # THESIS
-    TECHREPORT    => [qw(author title type institution year/date)],   # REPORT
-    WWW           => [qw(author/editor title year/date url)],         # ONLINE
+    CONFERENCE     => [qw(author title booktitle year/date)],           # INPROCEEDINGS
+    ELECTRONIC     => [qw(author/editor title year/date url)],          # ONLINE
+    MASTERSTHESIS  => [qw(author title type institution year/date)],    # THESIS
+    PHDTHESIS      => [qw(author title type institution year/date)],    # THESIS
+    TECHREPORT     => [qw(author title type institution year/date)],    # REPORT
+    WWW            => [qw(author/editor title year/date url)],          # ONLINE
 );
 
 my @Serialisation = (
@@ -400,9 +400,7 @@ sub resolve {
         if ( $CrossRefKey{ $self->{_crossref}->type }{ $self->type }{$key} ) {
 
             # print STDERR "## source field ", $CrossRefKey{ $self->{_crossref}->type }{ $self->type }{$key}, "\n";
-            return $self->{_crossref}
-                ->{ $CrossRefKey{ $self->{_crossref}->type }{ $self->type }
-                    {$key} };
+            return $self->{_crossref}->{ $CrossRefKey{ $self->{_crossref}->type }{ $self->type }{$key} };
         }
     }
     return undef;
@@ -493,8 +491,7 @@ sub _handle_author_editor {
                             # my @names = split /\s+and\s+/i, $_[0];
             $_[0] =~ s/^\s*//;
             $_[0] =~ s/\s*$//;
-            my @names
-                = BibTeX::Parser::_split_braced_string( $_[0], '\s+and\s+' );
+            my @names = BibTeX::Parser::_split_braced_string( $_[0], '\s+and\s+' );
             if ( !scalar @names ) {
                 $self->error('Bad names in author/editor field');
                 return;
@@ -510,8 +507,7 @@ sub _handle_author_editor {
                     push @{ $self->{"_$type"} }, $param;
                 }
                 else {
-                    push @{ $self->{"_$type"} },
-                        new BibTeX::Parser::Author $param;
+                    push @{ $self->{"_$type"} }, new BibTeX::Parser::Author $param;
                 }
 
                 $self->field( $type, join " and ", @{ $self->{"_$type"} } );
@@ -520,9 +516,7 @@ sub _handle_author_editor {
     }
     else {
         unless ( defined $self->{"_$type"} ) {
-            my @names
-                = BibTeX::Parser::_split_braced_string( $self->{$type} || "",
-                '\s+and\s+' );
+            my @names = BibTeX::Parser::_split_braced_string( $self->{$type} || "", '\s+and\s+' );
             $self->{"_$type"}
                 = [ map { new BibTeX::Parser::Author $_} @names ];
         }
@@ -556,6 +550,38 @@ Note: You can also change the authors with $entry->field('editor', $editors_stri
 
 sub editor {
     _handle_author_editor( 'editor', @_ );
+}
+
+=head2 author_string( [$format] )
+=head2 editor_string( [$format] )
+
+Return author/editor as a string according for C<$format>. Format can be
+'lastfirst' (the default), 'firstlast' or 'abbreviated'.
+
+=cut
+
+sub _authoreditor_string {
+    my ( $type, $self, $format, $join, $joinlast ) = @_;
+    $join     = ", "  unless ($join);
+    $joinlast = " & " unless ($joinlast);
+    my $s = '';
+    my @names = map { $_->to_string($format) } _handle_author_editor( $type, $self );
+    if ( scalar @names > 1 ) {
+        $s .= join( $join, @names[ 0 .. $#names - 1 ] );
+        $s .= $joinlast . $names[$#names];
+    }
+    else {
+        $s .= $names[0];
+    }
+    return $s;
+}
+
+sub author_string {
+    _authoreditor_string( 'author', @_ );
+}
+
+sub editor_string {
+    _authoreditor_string( 'editor', @_ );
 }
 
 =head2 fieldlist()
@@ -657,8 +683,7 @@ sub validate {
                 }
             }
             unless ($has_it) {
-                push @{ $self->{_check_errors} },
-                    "missing mandatory field '$fields'";
+                push @{ $self->{_check_errors} }, "missing mandatory field '$fields'";
                 $self->{_validated} = 0;
             }
         }
@@ -693,6 +718,51 @@ sub raw_bibtex {
         $self->{_raw} = shift;
     }
     return $self->{_raw};
+}
+
+=head2 as_reference( [$style] )
+
+Return a formatted reference according to $style (which defaults to APA). Now,
+this is really, really simple and cannot be considered a complete reference
+formatter. Actually, if I'm about to build formatting into this, I have to use
+CSL or something. Otherwise, it's rather useless.
+
+=cut
+
+sub as_reference {
+    my ( $self, $style ) = shift;
+    my $type = $self->type;
+    my $s    = '';
+
+    my $title_as_author;
+
+    # author (or title)
+    if ( $self->has('author') ) {
+        $s .= $self->author_string('abbrev');
+    }
+    elsif ( $self->has('editor') ) {
+        $s .= $self->editor_string('abbrev') . " (ed.)";
+    }
+    else {
+        $s .= '*' . $self->cleaned_field( 'title' ) . '*';
+        $title_as_author = 1;
+    }
+
+    # year
+    my $year = $self->resolve( 'year' );
+    $year = 'ND' unless ($year);
+    $s .= "." unless ($s =~ m/\.$/);
+    $s .= " ($year). ";
+
+    # title
+    unless ($title_as_author) {
+        $s .= "*";
+        $s .= $self->cleaned_field( 'title');
+        $s .= ": " . $self->cleaned_field( 'subtitle') if ($self->has('subtitle'));
+        $s .= "*.";
+    }
+
+    return $s;
 }
 
 =head2 to_string ()
@@ -739,8 +809,7 @@ sub to_string {
     # serialise fields
     foreach my $field (@Serialisation) {
         if ( $self->has($field) ) {
-            $result
-                .= _field_to_string( $field, $self->field($field), $width );
+            $result .= _field_to_string( $field, $self->field($field), $width );
             $printed{$field} = 1;
         }
     }

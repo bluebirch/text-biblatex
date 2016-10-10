@@ -1,0 +1,16 @@
+{
+    "folders":
+    [
+        {
+            "path": "."
+        },
+        {
+            "path": "lib/BibTeX",
+            "name": "Source"
+        },
+        {
+            "path": "t",
+            "name": "Tests"
+        }
+    ]
+}

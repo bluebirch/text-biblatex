@@ -5,6 +5,8 @@ use warnings;
 use strict;
 use locale;    # for sorting
 
+#use Unicode::Collate;
+
 use BibTeX::Parser;
 use IO::File;
 
@@ -65,37 +67,10 @@ sub open {
         $self->ok(1);
         while ( my $entry = $parser->next ) {
             if ( $entry->parse_ok ) {
-
-                if ( $entry->type eq 'COMMENT' ) {
-                    push @{ $self->{comment} }, $entry;
-                }
-                elsif ( $entry->type eq 'PREAMBLE' ) {
-                    push @{ $self->{preamble} }, $entry;
-                }
-                else {
-                    push @{ $self->{entry} }, $entry;
-
-                    # index of keys
-                    if ( !defined $self->{index}->{ $entry->key } ) {
-                        $self->{index}->{ $entry->key }
-                            = $#{ $self->{entry} };
-                    }
-                    else {
-                        $self->error( "Duplicate key "
-                                . $entry->key
-                                . " (line "
-                                . $parser->{line}
-                                . ")" );
-                        last;
-                    }
-                }
+                last unless ( $self->add($entry) );
             }
             else {
-                $self->error( "Parse failed: "
-                        . $entry->error
-                        . " (line "
-                        . $parser->{line}
-                        . ")" );
+                $self->error( "Parse failed: " . $entry->error . " (line " . $parser->{line} . ")" );
                 last;
             }
         }
@@ -113,8 +88,7 @@ sub open {
             if ( $self->{entry}->[$i]->has('crossref') ) {
                 my $crossref = $self->{entry}->[$i]->field('crossref');
                 if ( defined $self->{index}->{$crossref} ) {
-                    $self->{entry}->[$i]->_field( '_crossref',
-                        $self->{entry}->[ $self->{index}->{$crossref} ] );
+                    $self->{entry}->[$i]->_field( '_crossref', $self->{entry}->[ $self->{index}->{$crossref} ] );
 
                     # printf STDERR "%s (%d) cross-referenced from %s (%d)\n",
                     #     $crossref, $self->{index}->{$crossref},
@@ -249,9 +223,107 @@ Sort database on author, year, title.
 
 sub sort {
     my $self = shift;
+
+    #my $collator = Unicode::Collate->new();
     @{ $self->{entry} }
         = sort { $a->_sortkey() cmp $b->_sortkey() } @{ $self->{entry} };
+
+    #        = sort { $collator->cmp( $a->_sortkey(), $b->_sortkey() ) } @{ $self->{entry} };
     $self->{pos} = -1;
+}
+
+=head2 add( $entry )
+
+Add L<BibTeX::Parser::Entry> to database.
+
+=cut
+
+sub add {
+    my ( $self, $entry ) = @_;
+    if ( $entry->type eq 'COMMENT' ) {
+        push @{ $self->{comment} }, $entry;
+    }
+    elsif ( $entry->type eq 'PREAMBLE' ) {
+        push @{ $self->{preamble} }, $entry;
+    }
+    else {
+        #print STDERR "adding normal entry ", $entry->key, "\n";
+        push @{ $self->{entry} }, $entry;
+
+        # update index of keys
+        if ( !defined $self->{index}->{ $entry->key } ) {
+            $self->{index}->{ $entry->key } = $#{ $self->{entry} };
+        }
+        else {
+            $self->error( "Duplicate key " . $entry->key );
+            #print STDERR "duplicate key, returing false value\n";
+            return 0;
+        }
+
+        delete $self->{isbn_index} if ($self->{isbn_index});
+        delete $self->{bibid_index} if ($self->{bibid_index});
+    }
+    return 1;
+}
+
+=head2 lookup_isbn( $isbn )
+
+Find entry with specified isbn.
+
+=cut
+
+sub _build_isbn_index {
+    my $self = shift;
+    delete $self->{isbn_index};
+    for my $i ( 0 .. $#{ $self->{entry} } ) {
+        if ( $self->{entry}->[$i]->has('isbn') ) {
+            my $isbn = $self->{entry}->[$i]->field('isbn');
+            $isbn =~ s/[^0-9]//g;
+            $self->{isbn_index}->{$isbn} = $i;
+        }
+    }
+}
+
+sub lookup_isbn {
+    my ( $self, $isbn ) = @_;
+    $self->_build_isbn_index unless ( $self->{isbn_index} );
+    $isbn =~ s/[^0-9]//g;
+    #print STDERR "lookup isbn=$isbn\n";
+    if ( defined $self->{isbn_index}->{$isbn} ) {
+        return $self->{entry}->[ $self->{isbn_index}->{$isbn} ];
+    }
+    return undef;
+}
+
+=head2 lookup_bibid( $bibid )
+
+Find entry with specified LIBRIS-ID.
+
+=cut
+
+sub _build_bibid_index {
+    my $self = shift;
+    delete $self->{bibid_index};
+    #print STDERR "building bibid index\n";
+    for my $i ( 0 .. $#{ $self->{entry} } ) {
+        if ( $self->{entry}->[$i]->has('bibid') ) {
+            my $bibid = $self->{entry}->[$i]->field('bibid');
+            $self->{bibid_index}->{$bibid} = $i;
+#            print STDERR "$bibid -> $i\n";
+        }
+    }
+}
+
+sub lookup_bibid {
+    my ( $self, $bibid ) = @_;
+    $self->_build_bibid_index unless ( $self->{bibid_index} );
+    #print STDERR "lookup bibid=$bibid\n";    
+    if ( defined $self->{bibid_index}->{$bibid} ) {
+        #print STDERR "bibid=$bibid found at $self->{bibid_index}->{$bibid}\n";
+        return $self->{entry}->[ $self->{bibid_index}->{$bibid} ];
+    }
+    #print STDERR "not found\n";
+    return undef;
 }
 
 =head2 ok()

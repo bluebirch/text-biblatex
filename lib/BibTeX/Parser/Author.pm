@@ -122,8 +122,7 @@ sub split {
         return ( undef, undef, undef, undef );
     }
 
-    my @comma_separated
-        = BibTeX::Parser::_split_braced_string( $name, '\s*,\s*' );
+    my @comma_separated = BibTeX::Parser::_split_braced_string( $name, '\s*,\s*' );
     if ( scalar(@comma_separated) == 0 ) {
 
         # Error?
@@ -147,8 +146,7 @@ sub split {
             $first = join( ' ', splice( @tokens, 0, $start_von ) );
         }
         if ( ( $start_last - $start_von ) > 0 ) {
-            $von
-                = join( ' ', splice( @tokens, 0, $start_last - $start_von ) );
+            $von = join( ' ', splice( @tokens, 0, $start_last - $start_von ) );
         }
         $last = join( ' ', @tokens );
         return ( $first, $von, $last, $jr );
@@ -156,22 +154,16 @@ sub split {
 
     # Now we work with von Last, [Jr,] First form
     if ( scalar @comma_separated == 2 ) {    # no jr
-        my @tokens
-            = BibTeX::Parser::_split_braced_string( $comma_separated[1],
-            '\s+' );
+        my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
         $first = join( ' ', @tokens );
     }
     else {                                   # jr is present
-        my @tokens
-            = BibTeX::Parser::_split_braced_string( $comma_separated[1],
-            '\s+' );
+        my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[1], '\s+' );
         $jr = join( ' ', @tokens );
-        @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[2],
-            '\s+' );
+        @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[2], '\s+' );
         $first = join( ' ', @tokens );
     }
-    my @tokens
-        = BibTeX::Parser::_split_braced_string( $comma_separated[0], '\s+' );
+    my @tokens = BibTeX::Parser::_split_braced_string( $comma_separated[0], '\s+' );
     my $start_last = _getStartLast(@tokens);
     if ( $start_last > 0 ) {
         $von = join( ' ', splice( @tokens, 0, $start_last ) );
@@ -239,9 +231,7 @@ sub _split_name_parts {
     else {
         my @parts;
         my $cur_token = '';
-        while (
-            scalar( $name =~ /\G ( [^\s\{]* ) ( \s+ | \{ | \s* $ ) /xgc ) )
-        {
+        while ( scalar( $name =~ /\G ( [^\s\{]* ) ( \s+ | \{ | \s* $ ) /xgc ) ) {
             $cur_token .= $1;
             if ( $2 =~ /\{/ ) {
                 if ( scalar( $name =~ /\G([^\}]*)\}/gc ) ) {
@@ -270,16 +260,14 @@ sub _get_single_author_from_tokens {
         return ( undef, undef, undef, undef );
     }
     elsif ( @tokens == 1 ) {    # name without comma
-        if ( $tokens[0] =~ /(^|\s)[[:lower:]]/ )
-        {    # name has von part or has only lowercase names
+        if ( $tokens[0] =~ /(^|\s)[[:lower:]]/ ) {    # name has von part or has only lowercase names
             my @name_parts = _split_name_parts $tokens[0];
 
             my $first;
             while ( @name_parts
                 && ucfirst( $name_parts[0] ) eq $name_parts[0] )
             {
-                $first
-                    .= $first ? ' ' . shift @name_parts : shift @name_parts;
+                $first .= $first ? ' ' . shift @name_parts : shift @name_parts;
             }
 
             my $von;
@@ -315,8 +303,7 @@ sub _get_single_author_from_tokens {
         while ( @von_last_parts
             && lc( $von_last_parts[0] ) eq $von_last_parts[0] )
         {
-            $von
-                .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
+            $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
         }
         return ( $tokens[1], $von, join( " ", @von_last_parts ), undef );
     }
@@ -328,36 +315,52 @@ sub _get_single_author_from_tokens {
         while ( @von_last_parts
             && lc( $von_last_parts[0] ) eq $von_last_parts[0] )
         {
-            $von
-                .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
+            $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
         }
         return ( $tokens[2], $von, join( " ", @von_last_parts ), $tokens[1] );
     }
 
 }
 
-=head2 to_string
+=head2 to_string( [$format] )
 
-Return string representation of the name.
+Return string representation of the name according to C<$format>. Format is
+'FirstLast', 'LastFirst' or 'Abbreviated'. Default is 'LastFirst'.
 
 =cut
 
 sub to_string {
-    my $self = shift;
+    my ( $self, $format ) = @_;
+    $format = 'LastFirst' unless ($format);
+    my $s = '';
 
-    if ( $self->jr ) {
-        return
-              $self->von . " "
-            . $self->last . ", "
-            . $self->jr . ", "
-            . $self->first;
+    if ( $format =~ m/^firstlast/i ) {
+        $s .= $self->first if ( $self->first );
+        if ( $self->von ) {
+            $s .= " " if ($s);
+            $s .= $self->von;
+        }
+        $s .= " "             if ($s);
+        $s .= $self->last;
+        $s .= " " . $self->jr if ( $self->jr );
+    }
+    elsif ( $format =~ m/^abbrev/i ) {
+        $s .= $self->von . " " if ( $self->von );
+        $s .= $self->last;
+        $s .= ", " . $self->jr if ( $self->jr );
+        if ( $self->first ) {
+            my $first = $self->first;
+            $first =~ s/([[:upper:]])[[:lower:]]*\.?/$1./g;
+            $s .= ", " . $first;
+        }
     }
     else {
-        return
-              ( $self->von ? $self->von . " " : '' )
-            . $self->last
-            . ( $self->first ? ", " . $self->first : '' );
+        $s .= $self->von . " "    if ( $self->von );
+        $s .= $self->last;
+        $s .= ", " . $self->jr    if ( $self->jr );
+        $s .= ", " . $self->first if ( $self->first );
     }
+    return $s;
 }
 
 =head2 sortname
@@ -369,12 +372,12 @@ Return string as name suitable for sorting.
 use locale;
 
 sub sortname {
-    my $self = shift;
+    my $self     = shift;
     my $sortname = $self->last;
-    my $first = $self->first;
+    my $first    = $self->first;
     $sortname .= $first if ($first);
-    $sortname =~ s/[-\s\.]+//g; # remove whitespace
-    return lc( $sortname );
+    $sortname =~ s/[-\s\.]+//g;    # remove whitespace
+    return lc($sortname);
 }
 
 no locale;
@@ -382,9 +385,7 @@ no locale;
 # Return 1 if the first letter on brace level 0 is lowercase
 sub _is_von_token {
     my $string = shift;
-    while (
-        $string =~ s/^(\\[[:alpha:]]+\{|\{|\\[[:^alpha:]]?|[[:^alpha:]])// )
-    {
+    while ( $string =~ s/^(\\[[:alpha:]]+\{|\{|\\[[:^alpha:]]?|[[:^alpha:]])// ) {
         if ( $1 eq '{' ) {
             my $numbraces = 1;
             while ( $numbraces != 0 && length($string) ) {
