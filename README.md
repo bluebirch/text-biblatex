@@ -1,15 +1,15 @@
-# BibTeX::Parser
+# Text::BibLaTeX
 
-`BibTeX::Parser` is a pure Perl BibTeX parser, originally developed by Gerhard Gossen, later improved by Boris Veytsman. This fork is intended to advance `BibTeX::Parser` beyond its original scope and become a proper BibTeX library for reading *and* writing of BibTeX files, somewhat like Gergory Ward's `Text::BibTeX` but without its complexity and drawbacks (most notably proper UTF-8 support).
+`Text::BibLaTeX` is a package for handling BibLaTeX files in a database like manner. It is a fork of `BibTeX::Parser`, a pure Perl BibTeX parser originally developed by Gerhard Gossen and later improved by Boris Veytsman. In this respect, it is similar to Gergory Ward's `Text::BibTeX` but without its complexity and drawbacks (most notably proper UTF-8 support).
 
-## BibTeX::Parser::DB
+## Text::BibLaTeX::DB
 
-The `BibTeX::Parser::DB` package provides a somewhat 'database like' approach:
+The `Text::BibLaTeX::DB` package provides a somewhat 'database like' approach:
 
 ```perl
-use BibTeX::Parser::DB;
+use Text::BibLaTeX::DB;
 
-my $bibdb = BibTeX::Parser::DB;
+my $bibdb = Text::BibLaTeX::DB;
 $bibdb->read($file);
 
 while ( my $entry = $bibdb->next ) {
@@ -19,10 +19,10 @@ while ( my $entry = $bibdb->next ) {
 $bibdb->write;
 ```
 
-On other words, `BibTeX::Parser::DB` takes care of reading and writing the BibTeX database.
+On other words, `Text::BibLaTeX::DB` takes care of reading and writing the BibTeX database.
 
-Note however that this is very simple, and since `BibTeX::Parser` collapses strings and other fancy stuff in the BibTeX syntax, that is what will be written back to the BibTeX file.
+Note however that this is very simple, and since `Text::BibLaTeX::Parser` collapses strings and other fancy stuff in the BibTeX syntax, that is what will be written back to the BibTeX file.
 
-## BibTeX::Parser::File
+## Text::BibLaTeX::File
 
-The `BibTeX::Parser::File` package is a simple way of keeping track of JabRef file link fields.
+The `Text::BibLaTeX::File` package is a simple way of keeping track of JabRef file link fields.
