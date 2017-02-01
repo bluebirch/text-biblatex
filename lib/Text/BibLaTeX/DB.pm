@@ -3,10 +3,11 @@ package Text::BibLaTeX::DB;
 # ABSTRACT: A database approach to BibTeX files.
 use warnings;
 use strict;
-use locale;    # for sorting
+use utf8;
+use locale;
 
-#use Unicode::Collate;
-
+use POSIX qw(locale_h);
+use Unicode::Collate::Locale;
 use Text::BibLaTeX::Parser;
 use IO::File;
 
@@ -29,6 +30,12 @@ Text::BibLaTeX::DB - A database-like wrapper around L<BibTeX::Parser>.
 Create a new database object linked with file C<$filename>.
 
 =cut
+
+our $collator;
+
+BEGIN {
+    $collator = new Unicode::Collate::Locale locale => setlocale( LC_COLLATE );
+}
 
 sub new {
     my ( $class, $file, @options ) = @_;
@@ -224,11 +231,7 @@ Sort database on author, year, title.
 sub sort {
     my $self = shift;
 
-    #my $collator = Unicode::Collate->new();
-    @{ $self->{entry} }
-        = sort { $a->_sortkey() cmp $b->_sortkey() } @{ $self->{entry} };
-
-    #        = sort { $collator->cmp( $a->_sortkey(), $b->_sortkey() ) } @{ $self->{entry} };
+    @{ $self->{entry} } = sort { $collator->cmp( $a->_sortkey(), $b->_sortkey() ) } @{ $self->{entry} };
     $self->{pos} = -1;
 }
 
