@@ -354,6 +354,11 @@ sub to_string {
             $s .= ", " . $first;
         }
     }
+    elsif ( $format =~ m/^last$/i ) {
+        $s .= $self->von . " "    if ( $self->von );
+        $s .= $self->last;
+        $s .= ", " . $self->jr    if ( $self->jr );
+    }
     else {
         $s .= $self->von . " "    if ( $self->von );
         $s .= $self->last;
