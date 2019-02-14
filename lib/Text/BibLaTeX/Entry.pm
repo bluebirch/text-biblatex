@@ -516,7 +516,7 @@ sub _handle_author_editor {
     }
     else {
         unless ( defined $self->{"_$type"} ) {
-            my @names = Text::BibLaTeX::Parser::_split_braced_string( $self->{$type} || "", '\s+and\s+' );
+            my @names = Text::BibLaTeX::Parser::_split_braced_string( $self->resolve( $type ) || "", '\s+and\s+' );
             $self->{"_$type"}
                 = [ map { new Text::BibLaTeX::Author $_} @names ];
         }
@@ -841,13 +841,8 @@ sub _sortkey {
     if ( !$self->{_sortkey} ) {
 
         # author or editor names
-        my @names;
-        if ( $self->has('author') ) {
-            @names = $self->cleaned_author;
-        }
-        elsif ( $self->has('editor') ) {
-            @names = $self->cleaned_editor;
-        }
+        my @names = $self->cleaned_author;
+        @names = $self->cleaned_editor unless (@names);
         my $name = lc( join( '', map { $_->sortname } @names ) );
 
         # year
