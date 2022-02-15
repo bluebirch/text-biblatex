@@ -428,7 +428,7 @@ sub _remove {
     return 0;
 }
 
-use LaTeX::ToUnicode qw( convert );
+use Text::BibLaTeX::ToUnicode qw( convert );
 
 =head2 cleaned_field($name)
 
@@ -481,7 +481,7 @@ sub _handle_cleaned_author_editor {
     } @$authors;
 }
 
-no LaTeX::ToUnicode;
+no Text::BibLaTeX::ToUnicode;
 
 sub _handle_author_editor {
     my $type = shift;
@@ -561,14 +561,16 @@ Return author/editor as a string according for C<$format>. Format can be
 =cut
 
 sub _authoreditor_string {
-    my ( $type, $self, $format, $join, $joinlast ) = @_;
+    my ( $type, $self, $format, $join, $joinlast, $joinmax ) = @_;
     $join     = ", "  unless ($join);
     $joinlast = " & " unless ($joinlast);
+    $joinmax  = 5 unless($joinmax);
     my $s = '';
     my @names = map { $_->to_string($format) } _handle_author_editor( $type, $self );
     if ( scalar @names > 1 ) {
-        $s .= join( $join, @names[ 0 .. $#names - 1 ] );
-        $s .= $joinlast . $names[$#names];
+        my $last = $#names > $joinmax ? $joinmax : $#names;
+        $s .= join( $join, @names[ 0 .. $last-1 ] );
+        $s .= $joinlast . $names[$last];
     }
     else {
         $s .= $names[0];
@@ -582,6 +584,25 @@ sub author_string {
 
 sub editor_string {
     _authoreditor_string( 'editor', @_ );
+}
+
+=head2 year()
+
+Return year. Tries date if year does not exist.
+
+=cut
+
+sub year {
+    my $self = shift;
+    if ($self->has('year')) {
+        return $self->resolve('year');
+    }
+    elsif ($self->has('date')) {
+        my $date = $self->resolve('date');
+        $date =~ m/^(\d\d\d\d)/;
+        return $1 if ($1);
+    }
+    return undef;
 }
 
 =head2 fieldlist()

@@ -67,7 +67,7 @@ sub open {
         my $fh = IO::File->new( $self->{file}, "r" );
 
         # ensure UTF-8 encoding
-        $fh->binmode(":utf8");
+        $fh->binmode(":encoding(UTF-8)");
         my $parser = Text::BibLaTeX::Parser->new($fh);
 
         # parse BibTeX file
