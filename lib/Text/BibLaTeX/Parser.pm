@@ -1,9 +1,9 @@
 package Text::BibLaTeX::Parser;
 
 # ABSTRACT: A pure perl BibTeX parser
-use warnings;
-use strict;
-
+use Modern::Perl;
+use utf8;
+use open qw(:encoding(UTF-8));
 use Text::BibLaTeX::Entry;
 
 =for stopwords jr von

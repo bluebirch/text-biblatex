@@ -1,9 +1,9 @@
 package Text::BibLaTeX::Entry;
 
 # ABSTRACT: Contains a single entry of a BibTeX document
-use warnings;
-use strict;
-
+use Modern::Perl;
+use utf8;
+use open qw(:encoding(UTF-8));
 use Text::BibLaTeX::Parser;
 use Text::BibLaTeX::Author;
 use Text::BibLaTeX::File;

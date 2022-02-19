@@ -1,11 +1,9 @@
 package Text::BibLaTeX::DB;
 
 # ABSTRACT: A database approach to BibTeX files.
-use warnings;
-use strict;
+use Modern::Perl;
 use utf8;
 use locale;
-
 use POSIX qw(locale_h);
 use Unicode::Collate::Locale;
 use Text::BibLaTeX::Parser;
@@ -34,7 +32,7 @@ Create a new database object linked with file C<$filename>.
 our $collator;
 
 BEGIN {
-    $collator = new Unicode::Collate::Locale locale => setlocale( LC_COLLATE );
+    $collator = new Unicode::Collate::Locale locale => setlocale(LC_COLLATE);
 }
 
 sub new {
@@ -64,10 +62,12 @@ sub open {
     $self->{file} = $file if ($file);
 
     if ( $self->{file} && -f $self->{file} ) {
-        my $fh = IO::File->new( $self->{file}, "r" );
+        # if $file is a ref, assume it's a file handle (I guess there are much
+        # better ways to do this but today I feel lazy)
+        my $fh = ref($file) ? $file : IO::File->new( $file, "r" );
+        binmode( $fh, ":encoding(UTF-8)" );
+        die "file not open" unless ( $fh->opened );
 
-        # ensure UTF-8 encoding
-        $fh->binmode(":encoding(UTF-8)");
         my $parser = Text::BibLaTeX::Parser->new($fh);
 
         # parse BibTeX file
@@ -128,8 +128,12 @@ sub write {
     $file = $self->{file} unless ($file);
 
     if ($file) {
-        my $fh = IO::File->new( $file, "w" );
-        $fh->binmode(":utf8");
+
+        # if $file is a ref, assume it's a file handle (I guess there are much
+        # better ways to do this but today I feel lazy)
+        my $fh = ref($file) ? $file : IO::File->new( $file, "w" );
+        binmode( $fh, ":encoding(UTF-8)" );
+        die "file not open" unless ( $fh->opened );
 
         # write header (this is unnecessary, but avoids a bug in JabRef 3.2)
         print $fh "% Encoding: UTF-8\n\n";
@@ -259,12 +263,13 @@ sub add {
         }
         else {
             $self->error( "Duplicate key " . $entry->key );
+
             #print STDERR "duplicate key, returing false value\n";
             return 0;
         }
 
-        delete $self->{isbn_index} if ($self->{isbn_index});
-        delete $self->{bibid_index} if ($self->{bibid_index});
+        delete $self->{isbn_index}  if ( $self->{isbn_index} );
+        delete $self->{bibid_index} if ( $self->{bibid_index} );
     }
     return 1;
 }
@@ -291,6 +296,7 @@ sub lookup_isbn {
     my ( $self, $isbn ) = @_;
     $self->_build_isbn_index unless ( $self->{isbn_index} );
     $isbn =~ s/[^0-9]//g;
+
     #print STDERR "lookup isbn=$isbn\n";
     if ( defined $self->{isbn_index}->{$isbn} ) {
         return $self->{entry}->[ $self->{isbn_index}->{$isbn} ];
@@ -307,12 +313,14 @@ Find entry with specified LIBRIS-ID.
 sub _build_bibid_index {
     my $self = shift;
     delete $self->{bibid_index};
+
     #print STDERR "building bibid index\n";
     for my $i ( 0 .. $#{ $self->{entry} } ) {
         if ( $self->{entry}->[$i]->has('bibid') ) {
             my $bibid = $self->{entry}->[$i]->field('bibid');
             $self->{bibid_index}->{$bibid} = $i;
-#            print STDERR "$bibid -> $i\n";
+
+            #            print STDERR "$bibid -> $i\n";
         }
     }
 }
@@ -320,11 +328,14 @@ sub _build_bibid_index {
 sub lookup_bibid {
     my ( $self, $bibid ) = @_;
     $self->_build_bibid_index unless ( $self->{bibid_index} );
-    #print STDERR "lookup bibid=$bibid\n";    
+
+    #print STDERR "lookup bibid=$bibid\n";
     if ( defined $self->{bibid_index}->{$bibid} ) {
+
         #print STDERR "bibid=$bibid found at $self->{bibid_index}->{$bibid}\n";
         return $self->{entry}->[ $self->{bibid_index}->{$bibid} ];
     }
+
     #print STDERR "not found\n";
     return undef;
 }

@@ -1,8 +1,8 @@
 package Text::BibLaTeX::File;
 
 # ABSTRACT: Contains a single JabRef-style file reference for a BibTeX document
-use warnings;
-use strict;
+use Modern::Perl;
+use utf8;
 
 =head1 NAME
 

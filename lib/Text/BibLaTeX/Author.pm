@@ -1,8 +1,9 @@
 package Text::BibLaTeX::Author;
 
 # ABSTRACT: Contains a single author for a BibTeX document
-use warnings;
-use strict;
+use Modern::Perl;
+use utf8;
+use open qw(:encoding(UTF-8));
 
 use Text::BibLaTeX::Parser;
 

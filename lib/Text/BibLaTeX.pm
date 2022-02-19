@@ -1,8 +1,7 @@
 package Text::BibLaTeX;
 # ABSTRACT: Working with BibLaTeX files.
 
-use warnings;
-use strict;
+use Modern::Perl;
 
 =head1 NAME
 
