@@ -85,8 +85,8 @@ sub _convert_commands {
     my $string = shift;
 
     foreach my $command ( keys %Text::BibLaTeX::ToUnicode::Tables::COMMANDS ) {
-        $string =~ s/{\\$command}/$Text::BibLaTex::ToUnicode::Tables::COMMANDS{$command}/g;
-        $string =~ s/\\$command(?=\s|\b)/$Text::BibLaTex::ToUnicode::Tables::COMMANDS{$command}/g;
+        $string =~ s/\{\\$command\}/$Text::BibLaTeX::ToUnicode::Tables::COMMANDS{$command}/g;
+        $string =~ s/\\$command(?=\s|\b)/$Text::BibLaTeX::ToUnicode::Tables::COMMANDS{$command}/g;
     }
 
     $string;
@@ -95,8 +95,8 @@ sub _convert_commands {
 sub _convert_german {
     my $string = shift;
 
-    foreach my $symbol ( keys %Text::BibLaTex::ToUnicode::Tables::GERMAN ) {
-        $string =~ s/\Q$symbol\E/$Text::BibLaTex::ToUnicode::Tables::GERMAN{$symbol}/g;
+    foreach my $symbol ( keys %Text::BibLaTeX::ToUnicode::Tables::GERMAN ) {
+        $string =~ s/\Q$symbol\E/$Text::BibLaTeX::ToUnicode::Tables::GERMAN{$symbol}/g;
     }
     $string;
 }
@@ -104,9 +104,9 @@ sub _convert_german {
 sub _convert_symbols {
     my $string = shift;
 
-    foreach my $symbol ( keys %Text::BibLaTex::ToUnicode::Tables::SYMBOLS ) {
-        $string =~ s/{\\$symbol}/$Text::BibLaTex::ToUnicode::Tables::SYMBOLS{$symbol}/g;
-        $string =~ s/\\$symbol\b/$Text::BibLaTex::ToUnicode::Tables::SYMBOLS{$symbol}/g;
+    foreach my $symbol ( keys %Text::BibLaTeX::ToUnicode::Tables::SYMBOLS ) {
+        $string =~ s/{\\$symbol}/$Text::BibLaTeX::ToUnicode::Tables::SYMBOLS{$symbol}/g;
+        $string =~ s/\\$symbol\b/$Text::BibLaTeX::ToUnicode::Tables::SYMBOLS{$symbol}/g;
     }
     $string;
 }
@@ -114,7 +114,7 @@ sub _convert_symbols {
 sub _convert_markups {
     my $string = shift;
 
-    my $markups = join( '|', @Text::BibLaTex::ToUnicode::Tables::MARKUPS );
+    my $markups = join( '|', @Text::BibLaTeX::ToUnicode::Tables::MARKUPS );
     $string =~ s/(\{[^{}]+)\\(?:$markups)\s+([^{}]+})/$1$2/g; # { ... \command ... }
     my $pattern = qr/{\\(?:$markups)\s+([^{}]*)}/o;
     $string =~ s/$pattern/$1/g;
